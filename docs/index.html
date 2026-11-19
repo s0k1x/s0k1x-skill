@@ -227,7 +227,7 @@ html:not(.js) .rv { opacity: 1; transform: none; }
     <div class="glow" aria-hidden="true"></div>
     <div class="wrap">
       <div>
-        <span class="badge rv"><b>v1.2.0</b> · 36 skills · Claude Code, Codex, Gemini, Grok y más</span>
+        <span class="badge rv"><b>v1.3.0</b> · 36 skills · Claude Code, Codex, Gemini, Grok y más</span>
         <h1 id="hero-h" class="rv" style="--d:.08s">36 skills para <em>tu agente de código</em></h1>
         <p class="lead rv" style="--d:.16s">Una skill coordinadora elige cuál usar en cada tarea y en qué orden. Instálalas todas juntas o solo las que necesites.</p>
         <div class="hero__cta rv" style="--d:.24s">
@@ -319,9 +319,9 @@ html:not(.js) .rv { opacity: 1; transform: none; }
             <div class="term__bar"><span class="term__dots" aria-hidden="true"><i></i><i></i><i></i></span>Una sola skill</div>
             <div class="term__body">
               <div class="note">Claude Code, después de añadir el marketplace</div>
-              <div class="ln"><code>/plugin install s0k1x-componentes@s0k1x-skill</code><button class="copy" type="button">Copiar</button></div>
+              <div class="ln"><code>/plugin install s0k1x-maestra@s0k1x-skill</code><button class="copy" type="button">Copiar</button></div>
               <div class="note">Codex</div>
-              <div class="ln"><code>npx skills add s0k1x/s0k1x-skill -a codex -s s0k1x-componentes</code><button class="copy" type="button">Copiar</button></div>
+              <div class="ln"><code>npx skills add s0k1x/s0k1x-skill -a codex -s s0k1x-maestra</code><button class="copy" type="button">Copiar</button></div>
               <div class="note">Gemini, Grok y los demás: lo mismo cambiando codex por tu agente</div>
               <div class="note">s0k1x-flota, -retomar, -tokens-panel y -tokens-coach necesitan también s0k1x-tokens</div>
             </div>
@@ -361,7 +361,7 @@ html:not(.js) .rv { opacity: 1; transform: none; }
         <div class="flow" id="flow">
           <div class="step"><span class="step__dot">1</span><div><b>s0k1x-estilo</b><p>Elige paleta, tipografía y el hero.</p></div></div>
           <div class="step"><span class="step__dot">2</span><div><b>s0k1x-componentes</b><p>Construye la reserva, los precios y la galería.</p></div></div>
-          <div class="step"><span class="step__dot">3</span><div><b>s0k1x-humano</b><p>Reescribe los textos para que suenen naturales.</p></div></div>
+          <div class="step"><span class="step__dot">3</span><div><b>s0k1x-maestra</b><p>Escribe los textos sin tics de IA y gasta el mínimo de tokens.</p></div></div>
           <div class="step"><span class="step__dot">4</span><div><b>s0k1x-movimiento</b><p>Deja solo las animaciones con sentido.</p></div></div>
           <div class="step"><span class="step__dot">5</span><div><b>s0k1x-pulido</b><p>Revisa jerarquía, contraste y móvil.</p></div></div>
           <div class="step"><span class="step__dot">6</span><div><b>s0k1x-verificar</b><p>Comprueba la web en el navegador y para.</p></div></div>
@@ -377,7 +377,8 @@ html:not(.js) .rv { opacity: 1; transform: none; }
         <h2 id="preguntas-h" class="rv" style="--d:.06s">Lo que suele preguntarse</h2>
       </div>
       <div class="faq rv" style="--d:.1s">
-        <details><summary>¿Instalo el kit o skills sueltas?</summary><p>Una de las dos. Si instalas ambas, la misma skill aparece repetida.</p></details>
+        <details><summary>¿Qué hace s0k1x-maestra?</summary><p>Junta escritura humana y ahorro de tokens. Se activa sola en cada sesión de Claude Code: respuestas escuetas, lecturas acotadas y textos sin tics de IA. Se apaga diciendo «modo normal».</p></details>
+<details><summary>¿Instalo el kit o skills sueltas?</summary><p>Una de las dos. Si instalas ambas, la misma skill aparece repetida.</p></details>
         <details><summary>¿Qué cambia fuera de Claude Code?</summary><p>En Codex, Gemini, Grok y los demás, las skills y los flujos son iguales. Los subagentes y los mods son solo de Claude Code.</p></details>
         <details><summary>¿Qué necesito para usarlo?</summary><p>Un agente de código compatible con skills y Node para npx. Algunas skills necesitan Python 3.</p></details>
         <details><summary>¿Puedo modificar el código?</summary><p>No. Puedes instalarlo y usarlo tal cual. Las skills de otros autores conservan su licencia.</p></details>

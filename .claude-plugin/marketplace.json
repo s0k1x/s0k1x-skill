@@ -122,7 +122,7 @@
     {
       "name": "s0k1x-maestra",
       "source": "./plugins/s0k1x-maestra",
-      "description": "Una sola skill que junta escritura humana y ahorro máximo de tokens. Responde escueto en el chat, trabaja con el mínimo de contexto (lecturas acotadas, salidas cortas, sin releer ni repetir) y escribe los entregables (webs, docs, PRs, emails, commits) sin tics de IA."
+      "description": "Escritura humana y ahorro máximo de tokens en una sola skill, activa siempre. Chat escueto, contexto mínimo con las herramientas y entregables (webs, docs, PRs, emails) sin tics de IA. También para \"gasta poco\", \"ahorra tokens\", \"humaniza\", \"quita lo de IA\", \"sé breve\". Se apaga con \"modo normal\"."
     },
     {
       "name": "s0k1x-memoria",
