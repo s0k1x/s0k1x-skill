@@ -58,7 +58,17 @@ Leave alone: quotes, titles, proper names, letter greetings, odd specific detail
 
 Return: pasted text → final version. File → write final text only, prose only (code, paths, YAML, links intact), one-line summary. Inside another task → final text only.
 
-## 5. Before sending
+## 5. Memo DB (don't re-search, don't drag the chat)
+
+The model re-reads the whole chat every turn; a short chat is the biggest saving. Hooks inject the project memo at session start and matching entries with each prompt. Command: `python3 <skill>/scripts/memo.py` (exact path given at session start).
+
+- Before searching, use the injected memo or `find <words>`.
+- After finding something you'd otherwise search again: `add donde "auth: src/mw/auth.ts:42 checkToken"`. Choices: `add decision`. Pending work: `add tarea`, close with `done <id>`. Gotchas: `add error`. One line each, no secrets, no code dumps.
+- At a task boundary or when the chat gets long: `checkpoint "goal; state; files; next step"` (≤6 lines), then suggest `/clear`. The new session starts from that checkpoint instead of the old chat.
+- A Read of an unchanged file already in context is blocked once: use what you have. Repeat the same Read only if you truly lost it.
+- Memo can be stale: verify a location before editing.
+
+## 6. Before sending
 
 First sentence announces? Delete. Last recaps or offers help? Delete. Negations, numbers, paths, errors intact? Any sentence with two readings → write it out. Deliverable: any tell left, any fact added or lost? Context: did you load something you didn't use?
 
