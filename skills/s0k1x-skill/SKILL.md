@@ -5,7 +5,7 @@ description: Coordinador de s0k1x-skill, en Claude Code o en Codex. Úsala al em
 
 # s0k1x-skill
 
-Este kit junta 35 skills (más esta), 3 subagentes y 3 mods, y funciona en **Claude Code**, **Codex**, **Gemini CLI**, **Grok** y otros agentes que admiten skills. Cada skill sigue funcionando sola con su propio `SKILL.md`; esta skill decide **cuál usar, en qué orden y quién manda cuando dos opinan distinto**. No sustituye a ninguna: cuando elijas una, cárgala y sigue sus instrucciones.
+Este kit junta 35 skills (más esta), 5 subagentes y 3 mods, y funciona en **Claude Code**, **Codex**, **Gemini CLI**, **Grok** y otros agentes que admiten skills. Cada skill sigue funcionando sola con su propio `SKILL.md`; esta skill decide **cuál usar, en qué orden y quién manda cuando dos opinan distinto**. No sustituye a ninguna: cuando elijas una, cárgala y sigue sus instrucciones.
 
 Esta skill es para cuando el kit está instalado **completo**. Si solo hay algunas skills sueltas, cada una se usa por su cuenta y esta coordinación no hace falta. Antes de encadenar, mira qué skills están disponibles: si falta alguna del flujo, sáltala y sigue con las demás, sin inventar lo que haría.
 
@@ -120,7 +120,7 @@ Más detalle en [references/convivencia.md](references/convivencia.md).
 3. **Diseño en cadena, no en paralelo.** Primero dirección (`s0k1x-estilo`), luego piezas (`s0k1x-componentes`), luego movimiento (`s0k1x-movimiento`), luego pulido (`s0k1x-pulido`). Si `s0k1x-pulido` propone cambiar la identidad visual que fijó `s0k1x-estilo`, solo se acepta por accesibilidad o usabilidad. `s0k1x-movimiento` trabaja dentro del nivel de movimiento que fija `s0k1x-estilo`: en un restaurante o una clínica, microinteracciones discretas; los efectos llamativos quedan para webs de tecnología o juegos.
 4. **Un solo sistema de diseño.** Los tokens (colores, tipografías, espaciado) se definen una vez. Si el proyecto ya tiene `DESIGN.md` o `PRODUCT.md` de `s0k1x-pulido`, `s0k1x-estilo` y `s0k1x-movimiento` los respetan en vez de inventar otros.
 5. **`s0k1x-memoria` no se duplica.** Lo que guarda `s0k1x-memoria` no se repite en `CLAUDE.md` ni en `AGENTS.md`, ni al revés.
-6. **Subagentes.** En Claude Code, para localizar código prefiero `s0k1x-equipo-investigador` (corre en Haiku vía el mod Portero), y para análisis con explicación, `Explore`. En Codex, usa `s0k1x-breve-explorar` en el hilo principal. Si un subagente dice "No match." o "No issues.", lo compruebo una vez antes de creérmelo.
+6. **Subagentes.** Para tareas fáciles uso `s0k1x-rapido` (Haiku), y para cambios bien definidos, `s0k1x-medio` (Sonnet); lo difícil lo hago en el hilo principal. En Claude Code, para localizar código prefiero `s0k1x-equipo-investigador` (corre en Haiku vía el mod Portero), y para análisis con explicación, `Explore`. En Codex, usa `s0k1x-breve-explorar` en el hilo principal. Si un subagente dice "No match." o "No issues.", lo compruebo una vez antes de creérmelo.
 7. **Revisión única.** Para un mismo diff uso una revisión: `s0k1x-breve-revisar` en el hilo principal o `s0k1x-equipo-revisor` delegado, no las dos.
 
 ## Requieren permiso explícito del usuario

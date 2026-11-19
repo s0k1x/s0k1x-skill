@@ -35,6 +35,7 @@ HOOKS_SKILLS = {
     "s0k1x-maestra": os.path.join(RAIZ, "hooks", "maestra.json"),
 }
 DEPENDENCIAS_AGENTES = {
+    "s0k1x-maestra": ["s0k1x-rapido", "s0k1x-medio"],
     "s0k1x-equipo": ["s0k1x-equipo-investigador", "s0k1x-equipo-constructor", "s0k1x-equipo-revisor"],
 }
 

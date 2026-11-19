@@ -1,6 +1,6 @@
 # s0k1x-skill
 
-Un kit de 36 skills para **Claude Code**, **Codex**, **Gemini CLI**, **Grok** y más de 70 agentes compatibles con `npx skills`, con 3 subagentes y 3 mods para Claude Code. Puedes instalarlo entero, y entonces la skill `s0k1x-skill` coordina todas las demás, o instalar cada skill por separado. La skill **`s0k1x-skill`** decide cuál usar en cada momento, las encadena y resuelve los choques entre ellas. Cada skill sigue funcionando por separado.
+Un kit de 36 skills para **Claude Code**, **Codex**, **Gemini CLI**, **Grok** y más de 70 agentes compatibles con `npx skills`, con 5 subagentes y 3 mods para Claude Code. Puedes instalarlo entero, y entonces la skill `s0k1x-skill` coordina todas las demás, o instalar cada skill por separado. La skill **`s0k1x-skill`** decide cuál usar en cada momento, las encadena y resuelve los choques entre ellas. Cada skill sigue funcionando por separado.
 
 ## Qué incluye
 
@@ -16,7 +16,7 @@ Un kit de 36 skills para **Claude Code**, **Codex**, **Gemini CLI**, **Grok** y 
 | Memoria | `s0k1x-memoria` |
 | Coordinación | `s0k1x-skill` |
 
-**Subagentes** (`agents/`): `s0k1x-equipo-investigador`, `s0k1x-equipo-constructor` y `s0k1x-equipo-revisor`, que usa la skill `s0k1x-equipo`.
+**Subagentes** (`agents/`): `s0k1x-equipo-investigador`, `s0k1x-equipo-constructor` y `s0k1x-equipo-revisor`, que usa la skill `s0k1x-equipo`, y `s0k1x-rapido` (Haiku) y `s0k1x-medio` (Sonnet), que usa `s0k1x-maestra` para dar a cada tarea el modelo más barato que la resuelve.
 
 **Mods** (`hooks/register.tsx`):
 - **Portero**: manda a Haiku los subagentes de tareas fáciles.
@@ -61,7 +61,32 @@ Trae una **mini base de datos** SQLite por proyecto (`.claude/maestra/memo.db`, 
 - Al acabar una tarea, Claude guarda un punto de control y te sugiere `/clear`. La sesión nueva sigue desde ahí sin releer el chat anterior, que es lo que más tokens gasta.
 - Bloquea una vez la relectura de un archivo que ya está en el contexto y no ha cambiado. Para desactivarlo, `S0K1X_MAESTRA_READS=off`. Para que no se cargue nunca, define `S0K1X_MAESTRA=off` en el `env` de tu `settings.json`.
 
-En Codex, Gemini, Grok y otros agentes no hay hooks: añade al `AGENTS.md` (o `GEMINI.md`) la línea `Usa siempre la skill s0k1x-maestra en cada respuesta.`
+**En Codex, Gemini, Copilot, Cursor, Grok y los demás**, instálala con `npx skills` y ejecuta una vez su instalador desde la carpeta del proyecto (necesita Python 3):
+
+```
+npx skills add s0k1x/s0k1x-skill -a codex -s s0k1x-maestra
+python3 .agents/skills/s0k1x-maestra/scripts/instalar.py todos
+```
+
+Con Grok la ruta es `.grok/skills/s0k1x-maestra/scripts/instalar.py`. Si solo quieres algunos agentes, pon sus nombres en vez de `todos` (`codex gemini copilot cursor grok otros`). Con `--global` vale para todos tus proyectos, y con `--quitar` se deshace. Lo que hace en cada agente:
+
+| Agente | Reglas siempre | Memo al empezar | Memo con cada mensaje | Sin relecturas |
+|---|---|---|---|---|
+| Claude Code | hook | hook | hook | hook |
+| Codex | hook + `AGENTS.md` | hook | hook | — (sus hooks de herramientas solo cubren la shell) |
+| Gemini CLI | hook + `GEMINI.md` | hook | hook | hook (`read_file`) |
+| GitHub Copilot CLI | hook + `copilot-instructions.md` | hook | — (Copilot no deja añadir contexto ahí) | hook (`view`) |
+| Cursor | regla `.cursor/rules/s0k1x-maestra.mdc` | hook | hook | — |
+| Grok | `.grok/rules/s0k1x-maestra.md` | lo pide la regla (`brief`) | — | hook |
+| Otros | `AGENTS.md` | lo pide `AGENTS.md` | — | — |
+
+En Codex, confía en los hooks con `/hooks` la primera vez; en Grok, con `/hooks-trust`.
+
+**Modelo según la dificultad.** Las tareas fáciles (buscar, listar, resumir) van a un modelo barato, las medianas (cambios bien definidos, tests) a uno intermedio, y las difíciles (diseño, bugs ambiguos, seguridad) se quedan en el principal:
+- **Claude Code**: un hook pone el modelo a cada subagente que se lanza sin indicarlo. Los fáciles van a Haiku, y los medianos a Sonnet si la sesión va en Opus. Lo que decide queda en `.claude/maestra/router.log`. Para desactivarlo, `S0K1X_MAESTRA_ROUTER=off`.
+- **Gemini**: crea el subagente `s0k1x-rapido` con `gemini-3-flash-preview`.
+- **Copilot**: crea `s0k1x-rapido` si le das el modelo barato que quieras, con `--modelo-rapido=<id>`.
+- **Codex, Cursor, Grok y otros**: la skill les pide el mínimo esfuerzo de razonamiento en lo fácil y que te sugieran cambiar a un modelo más barato en tramos largos fáciles.
 
 Instala **el kit completo o skills sueltas, no las dos cosas**: si no, la misma skill aparece dos veces con nombres distintos.
 
