@@ -52,6 +52,12 @@ Después de añadir el marketplace, instala la skill que quieras por su nombre:
 
 Cada skill es un plugin propio y trae lo que necesita para funcionar: `s0k1x-flota`, `s0k1x-retomar`, `s0k1x-tokens-panel` y `s0k1x-tokens-coach` incluyen `s0k1x-tokens`, y `s0k1x-equipo` incluye sus 3 subagentes. La skill coordinadora `s0k1x-skill` y los mods solo vienen con el kit completo.
 
+### `s0k1x-maestra` se activa sola
+
+En Claude Code, al instalar el kit completo o `s0k1x-maestra@s0k1x-skill`, un hook `SessionStart` la carga en cada sesión nueva, y otra vez tras `/clear`, `/compact` o al reanudar. No hace falta pedirla. Para apagarla en una sesión, di "modo normal". Para que no se cargue nunca, define `S0K1X_MAESTRA=off` en el `env` de tu `settings.json`.
+
+En Codex, Gemini, Grok y otros agentes no hay hooks: añade al `AGENTS.md` (o `GEMINI.md`) la línea `Usa siempre la skill s0k1x-maestra en cada respuesta.`
+
 Instala **el kit completo o skills sueltas, no las dos cosas**: si no, la misma skill aparece dos veces con nombres distintos.
 
 ## Instalación en Codex

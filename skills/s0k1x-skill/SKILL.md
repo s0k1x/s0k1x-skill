@@ -36,7 +36,7 @@ Los nombres de skills, los flujos y las reglas de este documento son los mismos 
 | Qué dice cada sección de la web (estructura del copy) | `s0k1x-estilo` (`references/copy.md`) | — |
 | Cómo suena el texto que leerá una persona (web, emails, docs) | `s0k1x-humano` | — |
 | Cómo respondo en el chat (estilo escueto) | `s0k1x-breve` / `s0k1x-breve-ultra` / `s0k1x-breve-mega`, solo si el usuario lo pide | — |
-| Modo de trabajo de toda la sesión: chat escueto + contexto mínimo + entregables humanos | `s0k1x-maestra`, si el usuario pide gastar poco o la activa | `s0k1x-humano`, `s0k1x-breve`, `s0k1x-tokens` (trabajo a fondo) |
+| Modo de trabajo de toda la sesión: chat escueto + contexto mínimo + entregables humanos | `s0k1x-maestra`, activa siempre (se carga sola en cada sesión) | `s0k1x-humano`, `s0k1x-breve`, `s0k1x-tokens` (trabajo a fondo) |
 | Mensajes de commit | `s0k1x-breve-commit` si el usuario lo pide; si no, el formato del repo | — |
 | Diagnóstico de fallos | `s0k1x-investigar` | `s0k1x-breve-explorar` |
 | Cambios de código | `s0k1x-parche` (pequeño), `s0k1x-construir` (nuevo), `s0k1x-refactor` (reestructurar), `s0k1x-migrar` (transición) | `s0k1x-equipo-constructor` (Claude Code) |

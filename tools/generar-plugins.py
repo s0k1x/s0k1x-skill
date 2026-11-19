@@ -30,6 +30,10 @@ DEPENDENCIAS_SKILLS = {
     "s0k1x-tokens-panel": ["s0k1x-tokens"],   # ejecuta measure.py
     "s0k1x-tokens-coach": ["s0k1x-tokens"],   # ejecuta measure.py
 }
+# Skills que se activan solas en cada sesión con un hook SessionStart.
+HOOKS_SKILLS = {
+    "s0k1x-maestra": os.path.join(RAIZ, "hooks", "maestra.json"),
+}
 DEPENDENCIAS_AGENTES = {
     "s0k1x-equipo": ["s0k1x-equipo-investigador", "s0k1x-equipo-constructor", "s0k1x-equipo-revisor"],
 }
@@ -69,6 +73,9 @@ def main():
             enlazar(os.path.join(base, "skills", s), os.path.join(SKILLS, s))
         for a in DEPENDENCIAS_AGENTES.get(skill, []):
             enlazar(os.path.join(base, "agents", a + ".md"), os.path.join(RAIZ, "agents", a + ".md"))
+        if skill in HOOKS_SKILLS:
+            os.makedirs(os.path.join(base, "hooks"))
+            shutil.copyfile(HOOKS_SKILLS[skill], os.path.join(base, "hooks", "hooks.json"))
         desc = descripcion(skill)
         os.makedirs(os.path.join(base, ".claude-plugin"))
         manifiesto = {"name": skill, "version": version, "description": desc, "author": autor,

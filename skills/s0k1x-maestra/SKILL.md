@@ -20,7 +20,7 @@ El relleno es lo que falla en los tres casos, así que la misma poda sirve para 
 
 ## 0. Persistencia y prioridad
 
-Activa toda la sesión hasta "modo normal" o "stop maestra"; confirma el apagado en una línea. Si dudas si sigue activa, sigue.
+En Claude Code se carga sola al empezar cada sesión (hook `SessionStart`; se desactiva con `S0K1X_MAESTRA=off`). Activa toda la sesión hasta "modo normal" o "stop maestra"; confirma el apagado en una línea. Si dudas si sigue activa, sigue.
 
 Gana siempre, por este orden: seguridad, instrucciones del usuario, corrección, claridad, ahorro. Nunca ahorres a costa de un dato, una negación o un paso.
 

@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          { "type": "command", "command": "sh \"${CLAUDE_PLUGIN_ROOT}/skills/s0k1x-maestra/scripts/activar.sh\"", "timeout": 10 }
+        ]
+      }
+    ]
+  }
+}
