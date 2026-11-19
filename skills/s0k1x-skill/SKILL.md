@@ -5,7 +5,7 @@ description: Coordinador de s0k1x-skill, en Claude Code o en Codex. Úsala al em
 
 # s0k1x-skill
 
-Este kit junta 34 skills (más esta), 3 subagentes y 3 mods, y funciona en **Claude Code**, **Codex**, **Gemini CLI**, **Grok** y otros agentes que admiten skills. Cada skill sigue funcionando sola con su propio `SKILL.md`; esta skill decide **cuál usar, en qué orden y quién manda cuando dos opinan distinto**. No sustituye a ninguna: cuando elijas una, cárgala y sigue sus instrucciones.
+Este kit junta 35 skills (más esta), 3 subagentes y 3 mods, y funciona en **Claude Code**, **Codex**, **Gemini CLI**, **Grok** y otros agentes que admiten skills. Cada skill sigue funcionando sola con su propio `SKILL.md`; esta skill decide **cuál usar, en qué orden y quién manda cuando dos opinan distinto**. No sustituye a ninguna: cuando elijas una, cárgala y sigue sus instrucciones.
 
 Esta skill es para cuando el kit está instalado **completo**. Si solo hay algunas skills sueltas, cada una se usa por su cuenta y esta coordinación no hace falta. Antes de encadenar, mira qué skills están disponibles: si falta alguna del flujo, sáltala y sigue con las demás, sin inventar lo que haría.
 
@@ -36,6 +36,7 @@ Los nombres de skills, los flujos y las reglas de este documento son los mismos 
 | Qué dice cada sección de la web (estructura del copy) | `s0k1x-estilo` (`references/copy.md`) | — |
 | Cómo suena el texto que leerá una persona (web, emails, docs) | `s0k1x-humano` | — |
 | Cómo respondo en el chat (estilo escueto) | `s0k1x-breve` / `s0k1x-breve-ultra` / `s0k1x-breve-mega`, solo si el usuario lo pide | — |
+| Modo de trabajo de toda la sesión: chat escueto + contexto mínimo + entregables humanos | `s0k1x-maestra`, si el usuario pide gastar poco o la activa | `s0k1x-humano`, `s0k1x-breve`, `s0k1x-tokens` (trabajo a fondo) |
 | Mensajes de commit | `s0k1x-breve-commit` si el usuario lo pide; si no, el formato del repo | — |
 | Diagnóstico de fallos | `s0k1x-investigar` | `s0k1x-breve-explorar` |
 | Cambios de código | `s0k1x-parche` (pequeño), `s0k1x-construir` (nuevo), `s0k1x-refactor` (reestructurar), `s0k1x-migrar` (transición) | `s0k1x-equipo-constructor` (Claude Code) |
@@ -54,6 +55,7 @@ Los nombres de skills, los flujos y las reglas de este documento son los mismos 
 - `s0k1x-componentes`: construye cada pieza con oficio (luz, estados, material, detalle tipográfico) y enseña a estudiar y usar componentes de la comunidad (21st.dev, Uiverse, registros de shadcn) respetando su licencia.
 
 **Escritura**
+- `s0k1x-maestra`: todo en una. Responde escueto, gasta el mínimo de contexto con las herramientas y escribe los entregables sin tics de IA. Si está activa, no actives además `s0k1x-breve`: ya lo incluye.
 - `s0k1x-humano`: reescribe texto con tono humano y quita los tics de IA.
 
 **Respuestas escuetas y ahorro**

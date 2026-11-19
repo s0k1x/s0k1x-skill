@@ -120,6 +120,11 @@
       "description": "Diagnose ambiguous failures before editing. Use for unknown causes, intermittent behavior, performance regressions, or investigations needing evidence-ranked hypotheses."
     },
     {
+      "name": "s0k1x-maestra",
+      "source": "./plugins/s0k1x-maestra",
+      "description": "Una sola skill que junta escritura humana y ahorro máximo de tokens. Responde escueto en el chat, trabaja con el mínimo de contexto (lecturas acotadas, salidas cortas, sin releer ni repetir) y escribe los entregables (webs, docs, PRs, emails, commits) sin tics de IA."
+    },
+    {
       "name": "s0k1x-memoria",
       "source": "./plugins/s0k1x-memoria",
       "description": "Maintain a per-repo s0k1x-memoria as a continuously curated runbook (not a session log). Activates EVERY session. Read and curate it before work, keep only recurring high-value guidance, organize by priority-sorted categories, and cap each category at top 10 items."

@@ -1,0 +1,9 @@
+{
+  "name": "s0k1x-maestra",
+  "version": "1.2.0",
+  "description": "Una sola skill que junta escritura humana y ahorro máximo de tokens. Responde escueto en el chat, trabaja con el mínimo de contexto (lecturas acotadas, salidas cortas, sin releer ni repetir) y escribe los entregables (webs, docs, PRs, emails, commits) sin tics de IA.",
+  "author": {
+    "name": "s0k1x"
+  },
+  "repository": "https://github.com/s0k1x/s0k1x-skill"
+}
