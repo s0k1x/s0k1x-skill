@@ -1,12 +1,13 @@
 # s0k1x-skill
 
-Un kit de 35 skills para **Claude Code**, **Codex**, **Gemini CLI**, **Grok** y más de 70 agentes compatibles con `npx skills`, con 3 subagentes y 3 mods para Claude Code. Puedes instalarlo entero, y entonces la skill `s0k1x-skill` coordina todas las demás, o instalar cada skill por separado. La skill **`s0k1x-skill`** decide cuál usar en cada momento, las encadena y resuelve los choques entre ellas. Cada skill sigue funcionando por separado.
+Un kit de 36 skills para **Claude Code**, **Codex**, **Gemini CLI**, **Grok** y más de 70 agentes compatibles con `npx skills`, con 3 subagentes y 3 mods para Claude Code. Puedes instalarlo entero, y entonces la skill `s0k1x-skill` coordina todas las demás, o instalar cada skill por separado. La skill **`s0k1x-skill`** decide cuál usar en cada momento, las encadena y resuelve los choques entre ellas. Cada skill sigue funcionando por separado.
 
 ## Qué incluye
 
 | Área | Skills |
 |---|---|
 | Diseño web | `s0k1x-estilo`, `s0k1x-componentes` (piezas con oficio, no genéricas), `s0k1x-pulido`, `s0k1x-movimiento` (animaciones) |
+| Todo en una (escritura humana + ahorro) | `s0k1x-maestra` |
 | Escritura | `s0k1x-humano` |
 | Respuestas escuetas y ahorro | `s0k1x-breve`, `s0k1x-breve-ultra`, `s0k1x-breve-mega`, `s0k1x-breve-commit`, `s0k1x-breve-revisar`, `s0k1x-breve-explorar`, `s0k1x-breve-stats`, `s0k1x-breve-comprimir`, `s0k1x-breve-ayuda`, `s0k1x-equipo` |
 | Nube externa (opcional, servicio de terceros) | `s0k1x-breve-configurar`, `s0k1x-breve-descubrir`, `s0k1x-breve-evidencias`, `s0k1x-breve-gestionar`, `s0k1x-breve-optimizar`, `s0k1x-breve-aprender` |
@@ -44,11 +45,18 @@ O en un paso, en Claude Code 2.1.275 o posterior:
 Después de añadir el marketplace, instala la skill que quieras por su nombre:
 
 ```
+/plugin install s0k1x-maestra@s0k1x-skill
 /plugin install s0k1x-componentes@s0k1x-skill
 /plugin install s0k1x-pulido@s0k1x-skill
 ```
 
 Cada skill es un plugin propio y trae lo que necesita para funcionar: `s0k1x-flota`, `s0k1x-retomar`, `s0k1x-tokens-panel` y `s0k1x-tokens-coach` incluyen `s0k1x-tokens`, y `s0k1x-equipo` incluye sus 3 subagentes. La skill coordinadora `s0k1x-skill` y los mods solo vienen con el kit completo.
+
+### `s0k1x-maestra` se activa sola
+
+En Claude Code, al instalar el kit completo o `s0k1x-maestra@s0k1x-skill`, un hook `SessionStart` la carga en cada sesión nueva, y otra vez tras `/clear`, `/compact` o al reanudar. No hace falta pedirla. Para apagarla en una sesión, di "modo normal". Para que no se cargue nunca, define `S0K1X_MAESTRA=off` en el `env` de tu `settings.json`.
+
+En Codex, Gemini, Grok y otros agentes no hay hooks: añade al `AGENTS.md` (o `GEMINI.md`) la línea `Usa siempre la skill s0k1x-maestra en cada respuesta.`
 
 Instala **el kit completo o skills sueltas, no las dos cosas**: si no, la misma skill aparece dos veces con nombres distintos.
 

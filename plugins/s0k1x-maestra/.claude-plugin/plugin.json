@@ -1,0 +1,9 @@
+{
+  "name": "s0k1x-maestra",
+  "version": "1.3.0",
+  "description": "Escritura humana y ahorro máximo de tokens en una sola skill, activa siempre. Chat escueto, contexto mínimo con las herramientas y entregables (webs, docs, PRs, emails) sin tics de IA. También para \"gasta poco\", \"ahorra tokens\", \"humaniza\", \"quita lo de IA\", \"sé breve\". Se apaga con \"modo normal\".",
+  "author": {
+    "name": "s0k1x"
+  },
+  "repository": "https://github.com/s0k1x/s0k1x-skill"
+}
