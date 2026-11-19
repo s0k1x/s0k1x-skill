@@ -54,7 +54,12 @@ Cada skill es un plugin propio y trae lo que necesita para funcionar: `s0k1x-flo
 
 ### `s0k1x-maestra` se activa sola
 
-En Claude Code, al instalar el kit completo o `s0k1x-maestra@s0k1x-skill`, un hook `SessionStart` la carga en cada sesión nueva, y otra vez tras `/clear`, `/compact` o al reanudar. No hace falta pedirla. Para apagarla en una sesión, di "modo normal". Para que no se cargue nunca, define `S0K1X_MAESTRA=off` en el `env` de tu `settings.json`.
+En Claude Code, al instalar el kit completo o `s0k1x-maestra@s0k1x-skill`, un hook `SessionStart` la carga en cada sesión nueva, y otra vez tras `/clear`, `/compact` o al reanudar. No hace falta pedirla. Para apagarla en una sesión, di "modo normal".
+
+Trae una **mini base de datos** SQLite por proyecto (`.claude/maestra/memo.db`, ignorada por git; necesita Python 3) para que Claude no tenga que volver a buscar ni arrastrar el chat entero:
+- Guarda dónde está cada cosa, las decisiones, las tareas y los puntos de control. Al empezar cada sesión se inyecta un resumen corto, y con cada mensaje tuyo, las entradas que coinciden.
+- Al acabar una tarea, Claude guarda un punto de control y te sugiere `/clear`. La sesión nueva sigue desde ahí sin releer el chat anterior, que es lo que más tokens gasta.
+- Bloquea una vez la relectura de un archivo que ya está en el contexto y no ha cambiado. Para desactivarlo, `S0K1X_MAESTRA_READS=off`. Para que no se cargue nunca, define `S0K1X_MAESTRA=off` en el `env` de tu `settings.json`.
 
 En Codex, Gemini, Grok y otros agentes no hay hooks: añade al `AGENTS.md` (o `GEMINI.md`) la línea `Usa siempre la skill s0k1x-maestra en cada respuesta.`
 

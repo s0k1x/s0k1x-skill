@@ -1,6 +1,6 @@
 {
   "name": "s0k1x-breve-optimizar",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Turn a Caveman optimization observation into an operator-chosen candidate with a paired baseline evaluation. Use when asked to inspect or evaluate a Caveman optimization report. Needs explicit approval.",
   "author": {
     "name": "s0k1x"

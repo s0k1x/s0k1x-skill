@@ -1,6 +1,6 @@
 {
   "name": "s0k1x-breve-gestionar",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Inspect Caveman Cloud's experiment lifecycle and block unsafe execution. Use when asked to start, approve, cancel, promote or roll back a Caveman experiment.",
   "author": {
     "name": "s0k1x"
