@@ -1,16 +1,48 @@
 {
   "hooks": {
     "SessionStart": [
-      { "hooks": [ { "type": "command", "timeout": 10,
-        "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/skills/s0k1x-maestra/scripts/memo.py\" hook-start 2>/dev/null || sh \"${CLAUDE_PLUGIN_ROOT}/skills/s0k1x-maestra/scripts/activar.sh\"" } ] }
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 10,
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/skills/s0k1x-maestra/scripts/memo.py\" hook-start 2>/dev/null || sh \"${CLAUDE_PLUGIN_ROOT}/skills/s0k1x-maestra/scripts/activar.sh\""
+          }
+        ]
+      }
     ],
     "UserPromptSubmit": [
-      { "hooks": [ { "type": "command", "timeout": 5,
-        "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/skills/s0k1x-maestra/scripts/memo.py\" hook-prompt 2>/dev/null || true" } ] }
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 5,
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/skills/s0k1x-maestra/scripts/memo.py\" hook-prompt 2>/dev/null || true"
+          }
+        ]
+      }
     ],
     "PreToolUse": [
-      { "matcher": "Read", "hooks": [ { "type": "command", "timeout": 5,
-        "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/skills/s0k1x-maestra/scripts/memo.py\" hook-read 2>/dev/null || true" } ] }
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 5,
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/skills/s0k1x-maestra/scripts/memo.py\" hook-read 2>/dev/null || true"
+          }
+        ]
+      },
+      {
+        "matcher": "Agent|Task",
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 5,
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/skills/s0k1x-maestra/scripts/memo.py\" hook-agent 2>/dev/null || true"
+          }
+        ]
+      }
     ]
   }
 }

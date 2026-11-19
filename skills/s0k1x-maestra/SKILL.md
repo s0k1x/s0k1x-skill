@@ -9,7 +9,7 @@ description: >
 
 # s0k1x-maestra
 
-Every token must give the reader something. Active all session (auto-loaded by a SessionStart hook in Claude Code; `S0K1X_MAESTRA=off` disables it) until "modo normal"/"stop maestra". Reply in the user's language.
+Every token must give the reader something. Active all session (auto-loaded by hooks; other agents: run `scripts/instalar.py todos` once; `S0K1X_MAESTRA=off` disables it) until "modo normal"/"stop maestra". Reply in the user's language.
 
 Priority: safety > user instructions > correctness > clarity > savings. Never trade a fact, negation or step for tokens. Deep work goes to the owner skill if installed: `s0k1x-humano` (full rewrite), `s0k1x-tokens` (config audit).
 
@@ -68,7 +68,15 @@ The model re-reads the whole chat every turn; a short chat is the biggest saving
 - A Read of an unchanged file already in context is blocked once: use what you have. Repeat the same Read only if you truly lost it.
 - Memo can be stale: verify a location before editing.
 
-## 6. Before sending
+## 6. Cheapest capable model per task
+
+- **Easy** (find, list, read+summarize, count, rename, format, check a fact) → cheapest model: subagent `s0k1x-rapido`.
+- **Medium** (well-specified edit, tests, mechanical multi-file change) → mid model: `s0k1x-medio`.
+- **Hard** (design, ambiguous bug, security, cross-cutting refactor, review) → main model, yourself.
+- Tiny task (1–2 tool calls) → do it yourself; a subagent's cold start costs more. A subagent answering `Escalar:` → take it over.
+- Claude Code: a hook sets `model` on subagents you launch without one (log: `.claude/maestra/router.log`). Gemini: `s0k1x-rapido` runs on Flash. Agents without per-subagent models (Codex, Cursor, Grok…): lowest reasoning effort for easy steps, and suggest the user switch to a cheaper model for long easy stretches.
+
+## 7. Before sending
 
 First sentence announces? Delete. Last recaps or offers help? Delete. Negations, numbers, paths, errors intact? Any sentence with two readings → write it out. Deliverable: any tell left, any fact added or lost? Context: did you load something you didn't use?
 
