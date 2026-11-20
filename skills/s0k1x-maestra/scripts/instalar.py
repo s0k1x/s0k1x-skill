@@ -20,8 +20,20 @@ Es idempotente: repetirlo reemplaza lo suyo y no toca nada más.
 """
 import json
 import os
+import re
 import shlex
 import sys
+
+def _utf8():
+    # Windows usa cp1252 en consola: sin esto, una tilde o un ✓ rompen el hook
+    for flujo in (sys.stdout, sys.stderr):
+        try:
+            flujo.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):
+            pass
+
+
+_utf8()
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 SKILL = os.path.dirname(AQUI)
@@ -46,7 +58,15 @@ AGENTES = ("claude", "codex", "gemini", "copilot", "cursor", "grok", "otros")
 
 
 def q(ruta):
-    return '"%s"' % ruta.replace("\\", "/") if os.name == "nt" else shlex.quote(ruta)
+    if os.name != "nt":
+        return shlex.quote(ruta)
+    ruta = ruta.replace("\\", "/")  # las barras normales valen en cmd, PowerShell y bash
+    return '"%s"' % ruta if re.search(r"[\s&()^%!'\"]", ruta) else ruta
+
+
+def ps(comando):
+    """PowerShell no ejecuta una ruta entre comillas sin el operador &."""
+    return "& " + comando if comando.startswith('"') else comando
 
 
 def cmd(sub, agente, *extra):
@@ -109,7 +129,7 @@ def bloque(con_reglas):
     memo = f"{q(PY)} {q(MEMO)}"
     texto = [INI, "## s0k1x-maestra (siempre activa)", ""]
     if con_reglas:
-        texto.append(reglas())
+        texto.append(f"Skill dir: `{SKILL}`.\n\n" + reglas())
     else:
         texto.append(f"Sigue siempre la skill s0k1x-maestra (`{os.path.join(SKILL, 'SKILL.md')}`) en cada respuesta. "
                      "Si sus reglas no están ya en tu contexto, léela una vez al empezar.")
@@ -155,7 +175,9 @@ def instalar(agente, raiz, glob, quitar, modelo_rapido=None):
             "SessionStart": [grupo(cmd("hook-start", "claude"))],
             "UserPromptSubmit": [grupo(cmd("hook-prompt", "claude"), timeout=5)],
             "PreToolUse": [grupo(cmd("hook-read", "claude"), "Read", 5),
-                           grupo(cmd("hook-agent", "claude"), "Agent|Task", 5)],
+                           grupo(cmd("hook-agent", "claude"), "Agent|Task", 5),
+                           grupo(cmd("hook-shell", "claude"), "Bash", 5)],
+            "PostToolUse": [grupo(cmd("hook-agent-fin", "claude"), "Agent|Task", 5)],
         }, quitar=quitar)
         d = os.path.join(home if glob else raiz, ".claude", "agents")
         subagente(os.path.join(d, "s0k1x-rapido.md"), "name: s0k1x-rapido\ndescription: " + json.dumps(RAPIDO, ensure_ascii=False) +
@@ -167,6 +189,7 @@ def instalar(agente, raiz, glob, quitar, modelo_rapido=None):
         fusionar(os.path.join(home if glob else raiz, ".codex", "hooks.json"), {
             "SessionStart": [grupo(cmd("hook-start", "codex"), "startup|resume|clear")],
             "UserPromptSubmit": [grupo(cmd("hook-prompt", "codex"), timeout=5)],
+            "PreToolUse": [grupo(cmd("hook-shell", "codex"), "Bash", 5)],
         }, quitar=quitar)
         poner_bloque(os.path.join(home, ".codex", "AGENTS.md") if glob else os.path.join(raiz, "AGENTS.md"),
                      bloque(False), quitar)
@@ -174,7 +197,8 @@ def instalar(agente, raiz, glob, quitar, modelo_rapido=None):
         fusionar(os.path.join(home if glob else raiz, ".gemini", "settings.json"), {
             "SessionStart": [grupo(cmd("hook-start", "gemini"), ms=True)],
             "BeforeAgent": [grupo(cmd("hook-prompt", "gemini"), timeout=5, ms=True)],
-            "BeforeTool": [grupo(cmd("hook-read", "gemini"), "read_file", 5, ms=True)],
+            "BeforeTool": [grupo(cmd("hook-read", "gemini"), "read_file", 5, ms=True),
+                           grupo(cmd("hook-shell", "gemini"), "run_shell_command", 5, ms=True)],
         }, quitar=quitar)
         poner_bloque(os.path.join(home if glob else raiz, ".gemini" if glob else "", "GEMINI.md"), bloque(False), quitar)
         subagente(os.path.join(home if glob else raiz, ".gemini", "agents", "s0k1x-rapido.md"),
@@ -190,9 +214,11 @@ def instalar(agente, raiz, glob, quitar, modelo_rapido=None):
         else:
             escribir_json(ruta, {"version": 1, "hooks": {
                 "sessionStart": [{"type": "command", "bash": cmd("hook-start", "copilot"),
-                                  "powershell": cmd("hook-start", "copilot"), "timeoutSec": 10}],
+                                  "powershell": ps(cmd("hook-start", "copilot")), "timeoutSec": 10}],
                 "preToolUse": [{"type": "command", "matcher": "view", "bash": cmd("hook-read", "copilot"),
-                                "powershell": cmd("hook-read", "copilot"), "timeoutSec": 5}],
+                                "powershell": ps(cmd("hook-read", "copilot")), "timeoutSec": 5},
+                               {"type": "command", "matcher": "bash", "bash": cmd("hook-shell", "copilot"),
+                                "powershell": ps(cmd("hook-shell", "copilot")), "timeoutSec": 5}],
             }})
         if not glob:
             poner_bloque(os.path.join(raiz, ".github", "copilot-instructions.md"), bloque(False), quitar)
@@ -207,8 +233,8 @@ def instalar(agente, raiz, glob, quitar, modelo_rapido=None):
         # y el hook solo añade el memo; en global no hay reglas en archivo, así que las mete el hook.
         extra = () if glob else ("--sin-reglas",)
         fusionar(os.path.join(home if glob else raiz, ".cursor", "hooks.json"), {
-            "sessionStart": [{"command": cmd("hook-start", "cursor", *extra)}],
-            "beforeSubmitPrompt": [{"command": cmd("hook-prompt", "cursor")}],
+            "sessionStart": [{"command": ps(cmd("hook-start", "cursor", *extra)) if os.name == "nt" else cmd("hook-start", "cursor", *extra)}],
+            "beforeSubmitPrompt": [{"command": ps(cmd("hook-prompt", "cursor")) if os.name == "nt" else cmd("hook-prompt", "cursor")}],
         }, base={"version": 1}, quitar=quitar)
         if not glob:
             mdc = "---\ndescription: s0k1x-maestra, siempre activa\nalwaysApply: true\n---\n\n" + bloque(True)
@@ -221,7 +247,8 @@ def instalar(agente, raiz, glob, quitar, modelo_rapido=None):
         if quitar:
             poner_bloque(ruta, "", True, archivo_propio=True)
         else:
-            escribir_json(ruta, {"hooks": {"PreToolUse": [grupo(cmd("hook-read", "grok"), "Read", 5)]}})
+            escribir_json(ruta, {"hooks": {"PreToolUse": [grupo(cmd("hook-read", "grok"), "Read", 5),
+                                                          grupo(cmd("hook-shell", "grok"), "Bash", 5)]}})
         poner_bloque(os.path.join(base_dir, "rules", "s0k1x-maestra.md"), bloque(True), quitar, archivo_propio=True)
     elif agente == "otros":
         poner_bloque(os.path.join(raiz, "AGENTS.md"), bloque(False), quitar)

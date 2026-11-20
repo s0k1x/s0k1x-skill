@@ -7,3 +7,4 @@ DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 echo "s0k1x-maestra ACTIVE: follow these rules every reply until \"modo normal\". Already loaded; do not call the Skill tool for it."
 echo
 awk 'NR==1 && /^---$/ {f=1; next} f && /^---$/ {f=0; next} !f' "$DIR/SKILL.md"
+exit 0

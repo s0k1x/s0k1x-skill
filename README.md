@@ -86,8 +86,12 @@ Con Grok la ruta es `.grok/skills/s0k1x-maestra/scripts/instalar.py`. Si solo qu
 
 En Codex, confía en los hooks con `/hooks` la primera vez; en Grok, con `/hooks-trust`.
 
+**Aviso cuando el chat crece.** El chat entero se reenvía en cada mensaje, así que cuando el contexto pasa de 60.000 tokens (y luego cada 60.000 más), la skill le pide al agente que termine el paso, guarde un punto de control y te sugiera `/clear`. En Claude Code mide el uso real del último turno; en los demás, lo estima por el tamaño de la conversación. Cambia el límite con `S0K1X_MAESTRA_AVISO_TOKENS` (0 lo apaga).
+
+**Comandos silenciosos.** Antes de ejecutar `npm install`, `pip install`, `pytest`, `git clone`, `apt-get` o `docker pull`, añade la opción que quita el ruido pero deja ver los errores (`--loglevel=error`, `-q`…). No aprueba nada: el comando sigue pidiendo permiso como siempre. No toca comandos con tuberías complejas, heredocs ni subcomandos. Funciona en Claude Code, Codex, Gemini, Copilot y Grok; se apaga con `S0K1X_MAESTRA_SHELL=off`.
+
 **Modelo según la dificultad.** Las tareas fáciles (buscar, listar, resumir) van a un modelo barato, las medianas (cambios bien definidos, tests) a uno intermedio, y las difíciles (diseño, bugs ambiguos, seguridad) se quedan en el principal:
-- **Claude Code**: un hook pone el modelo a cada subagente que se lanza sin indicarlo. Los fáciles van a Haiku, y los medianos a Sonnet si la sesión va en Opus. Lo que decide queda en `.claude/maestra/router.log`. Para desactivarlo, `S0K1X_MAESTRA_ROUTER=off`.
+- **Claude Code**: un hook pone el modelo a cada subagente que se lanza sin indicarlo. Los fáciles van a Haiku, y los medianos a Sonnet si la sesión va en Opus. Lo que decide queda en `.claude/maestra/router.log`. Si un subagente barato responde «Escalar», lo recuerda y las tareas parecidas ya no van al modelo barato. Para desactivarlo, `S0K1X_MAESTRA_ROUTER=off`.
 - **Gemini**: crea el subagente `s0k1x-rapido` con `gemini-3-flash-preview`.
 - **Copilot**: crea `s0k1x-rapido` si le das el modelo barato que quieras, con `--modelo-rapido=<id>`.
 - **Codex, Cursor, Grok y otros**: la skill les pide el mínimo esfuerzo de razonamiento en lo fácil y que te sugieran cambiar a un modelo más barato en tramos largos fáciles.
@@ -152,6 +156,11 @@ Algunas skills necesitan tu permiso explícito: las skills de la nube externa y 
 
 - Los mods necesitan una versión de Claude Code con soporte de mods (`hooks.json` con `modules`). Sin ella, las skills funcionan igual.
 - Algunas skills usan Python 3 (`s0k1x-tokens`, `s0k1x-flota`, `s0k1x-retomar`) o descargan un binario la primera vez (`s0k1x-pulido`).
+
+## Tests y medición
+
+- `python3 -m unittest discover -s tests -v` comprueba `s0k1x-maestra` con la biblioteca estándar: los formatos de cada agente, la memoria, las relecturas, el aviso de chat largo, el recorte de comandos, el enrutador y el instalador. También ejecuta los comandos que genera el instalador, igual que los ejecutaría cada agente. GitHub los pasa en cada cambio en Linux, macOS y Windows (`.github/workflows/tests.yml`).
+- `python3 tools/medir-ahorro.py --repeticiones 2` mide el ahorro real. Última medición (20/11/2026, Claude Code con Opus, 5 tareas × 2): **12 % menos de coste en total**, 13 % menos de tokens de salida. Localizar código costó un 24 % menos y una tarea delegada en un subagente, un 46 % menos. Releer a propósito un archivo entero (+21 %) y una edición de una línea (+9 %) salieron más caras, por el coste fijo de las reglas en cada turno. Así se hace: ejecuta las mismas tareas con y sin la skill en copias limpias del repositorio y compara el coste y los tokens que da Claude Code. Gasta créditos de tu cuenta.
 
 ## Licencia
 

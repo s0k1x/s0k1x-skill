@@ -28,7 +28,18 @@ import sqlite3
 import sys
 import time
 
-VERSION = "1.6.0"
+def _utf8():
+    # Windows usa cp1252 en consola: sin esto, una tilde o un ✓ rompen el hook
+    for flujo in (sys.stdout, sys.stderr):
+        try:
+            flujo.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):
+            pass
+
+
+_utf8()
+
+VERSION = "1.7.0"
 TIPOS = ("dato", "decision", "donde", "tarea", "error")
 
 BIENVENIDA = """\
@@ -243,9 +254,8 @@ def hook_start(agente, reglas=True):
     script = os.path.abspath(__file__)
     partes = []
     if reglas:
-        partes.append("s0k1x-maestra ACTIVE: follow these rules every reply until \"modo normal\". "
-                      "Already loaded; do not load the skill again.\n\n" + skill_md())
-    partes.append(f"Memo command: \"{sys.executable or 'python3'}\" \"{script}\" <add|done|forget|find|checkpoint|brief>")
+        partes.append("s0k1x-maestra ACTIVE (already loaded, do not load it again).\n\n" + skill_md())
+    partes.append(f"Skill dir: {os.path.dirname(os.path.dirname(script))}. Memo command: \"{sys.executable or 'python3'}\" \"{script}\" <add|done|forget|find|checkpoint|brief>")
     try:
         db = conectar(data)
         if data.get("source", "startup") in ("startup", "clear", "compact", "new"):
@@ -273,16 +283,64 @@ def hook_start(agente, reglas=True):
     emitir_contexto(agente, "start", "\n\n".join(partes), aviso)
 
 
+def tokens_contexto(data):
+    """Tamaño actual del contexto: el uso real del último turno si el agente lo guarda; si no, una estimación."""
+    ruta = data.get("transcript_path")
+    if not ruta or not os.path.isfile(ruta):
+        return 0
+    try:
+        with open(ruta, "rb") as f:
+            f.seek(max(0, os.path.getsize(ruta) - 400_000))
+            lineas = f.read().decode("utf-8", "ignore").splitlines()
+    except OSError:
+        return 0
+    for linea in reversed(lineas):
+        if '"usage"' not in linea:
+            continue
+        try:
+            u = (json.loads(linea).get("message") or {}).get("usage") or {}
+        except ValueError:
+            continue
+        total = sum(int(u.get(k) or 0) for k in ("input_tokens", "cache_read_input_tokens", "cache_creation_input_tokens"))
+        if total:
+            return total
+    return os.path.getsize(ruta) // 6  # sin datos de uso: estimación prudente
+
+
+def aviso_contexto(data, db):
+    limite = int(os.environ.get("S0K1X_MAESTRA_AVISO_TOKENS", "60000") or 0)
+    if limite <= 0:
+        return ""
+    tokens = tokens_contexto(data)
+    nivel = tokens // limite
+    if nivel < 1:
+        return ""
+    db.execute("CREATE TABLE IF NOT EXISTS meta(k TEXT PRIMARY KEY, v TEXT)")
+    clave = "aviso|" + str(data.get("session_id", ""))
+    fila = db.execute("SELECT v FROM meta WHERE k=?", (clave,)).fetchone()
+    if fila and int(fila[0]) >= nivel:
+        return ""
+    db.execute("INSERT OR REPLACE INTO meta VALUES (?,?)", (clave, str(nivel)))
+    db.commit()
+    return (f"[s0k1x-maestra] The context is ~{tokens // 1000}k tokens and is re-sent on every turn. "
+            "Finish the current step, save a checkpoint (`memo.py checkpoint \"goal; state; files; next\"`), "
+            "then tell the user in one line to run /clear (or /compact) to continue much cheaper.")
+
+
 def hook_prompt(agente):
     data = leer_stdin()
     texto = data.get("prompt") or ""
-    salida = ""
+    db = conectar(data)
+    partes = []
     if len(texto) >= 12:
-        filas = [f for f in buscar(conectar(data), texto, 5) if f[1] != "checkpoint"]
+        filas = [f for f in buscar(db, texto, 5) if f[1] != "checkpoint"]
         if filas:
-            salida = ("Memo relevante (de la base del proyecto, puede estar desactualizado):\n" +
-                      "\n".join(f"- #{i} [{t}] {x}" for i, t, x in filas))[:PROMPT_MAX]
-    emitir_contexto(agente, "prompt", salida)
+            partes.append(("Memo relevante (de la base del proyecto, puede estar desactualizado):\n" +
+                           "\n".join(f"- #{i} [{t}] {x}" for i, t, x in filas))[:PROMPT_MAX])
+    aviso = aviso_contexto(data, db)
+    if aviso:
+        partes.append(aviso)
+    emitir_contexto(agente, "prompt", "\n\n".join(partes))
 
 
 def hook_read(agente):
@@ -301,8 +359,10 @@ def hook_read(agente):
         st = os.stat(ruta)
     except OSError:
         return
-    if st.st_size < 2048 or not os.path.isfile(ruta):
-        return  # archivos pequeños o carpetas: no merece la pena
+    minimo = int(os.environ.get("S0K1X_MAESTRA_READS_MIN", "24000") or 0)
+    if st.st_size < minimo or not os.path.isfile(ruta):
+        # medido: bloquear cuesta un turno de ida y vuelta, que sale más caro que releer un archivo mediano
+        return
     tramo = [str(ti.get(k, "")) for k in ("offset", "limit", "start_line", "end_line", "view_range")]
     clave = "|".join([str(data.get("session_id", "")), str(data.get("agent_id") or "main"), os.path.abspath(ruta)] + tramo)
     firma = f"{st.st_mtime_ns}:{st.st_size}"
@@ -336,16 +396,46 @@ MEDIO = re.compile(r"implement|añade|agrega|escribe (el |los |un |unos )?test|w
                    r"arregla|\bfix\b|actualiza|update|crea (un|una|el|la)|create")
 
 
-def elegir_modelo(tipo, texto, modelo_sesion):
+def palabras(texto):
+    return {w for w in re.findall(r"[a-záéíóúñü0-9_./-]{4,}", texto.lower())}
+
+
+def escalada_parecida(db, texto):
+    db.execute("CREATE TABLE IF NOT EXISTS escalados(id INTEGER PRIMARY KEY, palabras TEXT, ts REAL)")
+    nuevas = palabras(texto)
+    if not nuevas:
+        return False
+    for (guardadas,) in db.execute("SELECT palabras FROM escalados ORDER BY ts DESC LIMIT 200"):
+        viejas = set(guardadas.split())
+        if viejas and len(nuevas & viejas) / len(nuevas | viejas) >= 0.5:
+            return True
+    return False
+
+
+def elegir_modelo(tipo, texto, modelo_sesion, db=None):
     if tipo.lower() in SOLO_LECTURA:
         return "haiku", "subagente de solo lectura"
     if DIFICIL.search(texto):
         return None, "difícil: hereda el modelo principal"
+    if db is not None and escalada_parecida(db, texto):
+        return ("sonnet", "una parecida tuvo que escalar") if "opus" in modelo_sesion else (None, "una parecida tuvo que escalar")
     if FACIL.search(texto) and not MEDIO.search(texto):
         return "haiku", "fácil"
     if MEDIO.search(texto) and "opus" in modelo_sesion:
         return "sonnet", "media"
     return None, "sin señal clara: hereda"
+
+
+ESCALAR = ("\n\nSi la tarea resulta más difícil de lo previsto (diseño, depurar algo ambiguo, seguridad), "
+           "no la fuerces: responde solo `Escalar: <motivo en una línea>`.")
+
+
+def log_router(data, linea):
+    try:
+        with open(os.path.join(proyecto(data), ".claude", "maestra", "router.log"), "a", encoding="utf-8") as f:
+            f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} {linea}\n")
+    except OSError:
+        pass
 
 
 def hook_agent(agente):
@@ -364,16 +454,82 @@ def hook_agent(agente):
         fila = db.execute("SELECT v FROM meta WHERE k='modelo'").fetchone()
     except sqlite3.OperationalError:
         fila = None
-    modelo, motivo = elegir_modelo(tipo, texto, fila[0] if fila else "")
-    try:
-        with open(os.path.join(proyecto(data), ".claude", "maestra", "router.log"), "a", encoding="utf-8") as f:
-            f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} {tipo} -> {modelo or 'hereda'} ({motivo}): "
-                    f"{str(ti.get('description', ''))[:80]}\n")
-    except OSError:
-        pass
+    modelo, motivo = elegir_modelo(tipo, texto, fila[0] if fila else "", db)
+    log_router(data, f"{tipo} -> {modelo or 'hereda'} ({motivo}): {str(ti.get('description', ''))[:80]}")
     if modelo:
-        print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "allow",
-                                                 "updatedInput": {**ti, "model": modelo}}}))
+        nuevo = {**ti, "model": modelo}
+        if "prompt" in ti and tipo.lower() not in SOLO_LECTURA:
+            nuevo["prompt"] = str(ti["prompt"]) + ESCALAR
+        # sin permissionDecision: el cambio no aprueba nada, sigue el flujo de permisos normal
+        print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse", "updatedInput": nuevo}}))
+
+
+def hook_agent_fin(agente):
+    """PostToolUse de Agent: si el subagente pidió escalar, se recuerda para la próxima tarea parecida."""
+    data = leer_stdin()
+    ti = data.get("tool_input") or {}
+    respuesta = json.dumps(data.get("tool_response") or data.get("tool_output") or "", ensure_ascii=False)
+    if "Escalar:" not in respuesta or not isinstance(ti, dict):
+        return
+    texto = str(ti.get("description", "")) + " " + str(ti.get("prompt", ""))[:1500].replace(ESCALAR, "")
+    db = conectar(data)
+    db.execute("CREATE TABLE IF NOT EXISTS escalados(id INTEGER PRIMARY KEY, palabras TEXT, ts REAL)")
+    db.execute("INSERT INTO escalados(palabras, ts) VALUES (?,?)", (" ".join(sorted(palabras(texto))), time.time()))
+    db.commit()
+    log_router(data, f"ESCALADO: {str(ti.get('description', ''))[:80]} (las parecidas ya no irán a Haiku)")
+
+
+# --- Recorte de comandos ruidosos ------------------------------------------
+# Solo añade opciones silenciosas que siguen mostrando errores. Solo actúa si el
+# trozo del comando EMPIEZA por la herramienta (así no toca un `echo "npm install"`).
+REGLAS_SHELL = [
+    (re.compile(r"^((?:sudo\s+)?npm\s+(?:install|i|ci|add)\b)(?!.*--(?:loglevel|silent|quiet))"),
+     r"\1 --no-audit --no-fund --loglevel=error"),
+    (re.compile(r"^((?:sudo\s+)?(?:python3?\s+-m\s+)?pip3?\s+install\b)(?!.*\s-(?:q|v|-quiet|-verbose)\b)"), r"\1 -q"),
+    (re.compile(r"^((?:python3?\s+-m\s+)?pytest\b)(?!.*\s-(?:q|v|-quiet|-verbose|qq|vv)\b)"), r"\1 -q"),
+    (re.compile(r"^(git\s+clone\b)(?!.*\s(?:-q|--quiet|-v|--verbose|--progress)\b)"), r"\1 -q"),
+    (re.compile(r"^((?:sudo\s+)?apt(?:-get)?)(\s+(?:install|update|upgrade)\b)(?!.*\s-q)"), r"\1 -qq\2"),
+    (re.compile(r"^(docker\s+pull\b)(?!.*\s(?:-q|--quiet)\b)"), r"\1 -q"),
+]
+SEPARADOR = re.compile(r"(\s*(?:&&|\|\||;|\|)\s*)")
+
+
+def recortar_comando(cmd):
+    if "<<" in cmd or "`" in cmd or "$(" in cmd:
+        return cmd  # heredocs y subcomandos: no se tocan
+    trozos = SEPARADOR.split(cmd)
+    for i in range(0, len(trozos), 2):
+        lider = re.match(r"^\s*", trozos[i]).group(0)
+        cuerpo = trozos[i][len(lider):]
+        for patron, sustituto in REGLAS_SHELL:
+            if patron.search(cuerpo):
+                cuerpo = patron.sub(sustituto, cuerpo, count=1)
+                break
+        trozos[i] = lider + cuerpo
+    return "".join(trozos)
+
+
+def hook_shell(agente):
+    if os.environ.get("S0K1X_MAESTRA_SHELL", "on") == "off":
+        return
+    data = leer_stdin()
+    ti = data.get("tool_input") or {}
+    if not isinstance(ti, dict):
+        return
+    clave = next((k for k in ("command", "cmd") if isinstance(ti.get(k), str)), None)
+    if not clave:
+        return
+    nuevo = recortar_comando(ti[clave])
+    if nuevo == ti[clave]:
+        return
+    args = {**ti, clave: nuevo}
+    if agente == "gemini":
+        out = {"hookSpecificOutput": {"tool_input": {clave: nuevo}}}
+    elif agente == "copilot":
+        out = {"modifiedArgs": args}
+    else:  # claude, grok: sin permissionDecision, el comando sigue pidiendo permiso como siempre
+        out = {"hookSpecificOutput": {"hookEventName": "PreToolUse", "updatedInput": args}}
+    print(json.dumps(out))
 
 
 def main(argv):
@@ -383,7 +539,7 @@ def main(argv):
         print(__doc__)
         return 0
     cmd, args = argv[0], argv[1:]
-    if cmd in ("hook-start", "hook-prompt", "hook-read", "hook-agent"):
+    if cmd in ("hook-start", "hook-prompt", "hook-read", "hook-agent", "hook-agent-fin", "hook-shell"):
         agente = "claude"
         if "--agent" in args and args.index("--agent") + 1 < len(args):
             agente = args[args.index("--agent") + 1]
@@ -394,6 +550,10 @@ def main(argv):
                 hook_prompt(agente)
             elif cmd == "hook-agent":
                 hook_agent(agente)
+            elif cmd == "hook-agent-fin":
+                hook_agent_fin(agente)
+            elif cmd == "hook-shell":
+                hook_shell(agente)
             else:
                 hook_read(agente)
         except Exception as e:  # un hook nunca debe romper la sesión
