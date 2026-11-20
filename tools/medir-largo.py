@@ -61,7 +61,7 @@ def sesion(con_skill, registro):
     subprocess.run(["git", "init", "-q"], cwd=carpeta)
     subprocess.run(["git", "add", "-A"], cwd=carpeta)
     subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", "base"], cwd=carpeta)
-    sid, total, filas, limpiezas = None, 0.0, [], 0
+    sid, total, filas, limpiezas, acumulado = None, 0.0, [], 0, 0.0
     for n, peticion in enumerate(PETICIONES, 1):
         args = ["claude", "-p", peticion, "--output-format", "json", "--permission-mode", "acceptEdits",
                 "--allowedTools", "Read,Grep,Glob,Edit,Write,Agent,Bash"]
@@ -75,17 +75,20 @@ def sesion(con_skill, registro):
         except (ValueError, IndexError):
             d = {"is_error": True, "result": r.stderr[-300:]}
         u = d.get("usage") or {}
-        coste = float(d.get("total_cost_usd") or 0)
+        # total_cost_usd es el acumulado de la sesión: el coste de esta petición es la diferencia
+        acum = float(d.get("total_cost_usd") or 0)
+        coste = max(0.0, acum - acumulado)
+        acumulado = acum
         total += coste
         ctx = sum(int(u.get(k) or 0) for k in ("input_tokens", "cache_read_input_tokens", "cache_creation_input_tokens"))
         respuesta = str(d.get("result", ""))
         sid = d.get("session_id") or sid
         limpia = con_skill and "/clear" in respuesta
         if limpia:
-            sid, limpiezas = None, limpiezas + 1  # la persona hace /clear: la siguiente empieza de cero
+            sid, limpiezas, acumulado = None, limpiezas + 1, 0.0  # la persona hace /clear: la siguiente empieza de cero
         filas.append({"n": n, "coste": round(coste, 4), "entrada": ctx, "salida": int(u.get("output_tokens") or 0),
                       "turnos": d.get("num_turns"), "clear": limpia, "error": bool(d.get("is_error")),
-                      "modelos": sorted((d.get("modelUsage") or {}).keys()), "respuesta": respuesta[:400]})
+                      "modelos": sorted((d.get("modelUsage") or {}).keys()), "uso": u, "modelUsage": d.get("modelUsage"), "respuesta": respuesta[:400]})
         print(f"{'con' if con_skill else 'sin'} #{n:>2} ${coste:.4f} entrada={ctx:>7} salida={filas[-1]['salida']:>5}"
               f"{' /clear' if limpia else ''}{' ERROR' if filas[-1]['error'] else ''}", flush=True)
     ok = comprobar(carpeta)
