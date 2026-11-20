@@ -118,7 +118,7 @@ def bloque(con_reglas):
     memo = f"{q(PY)} {q(MEMO)}"
     texto = [INI, "## s0k1x-maestra (siempre activa)", ""]
     if con_reglas:
-        texto.append(reglas())
+        texto.append(f"Skill dir: `{SKILL}`.\n\n" + reglas())
     else:
         texto.append(f"Sigue siempre la skill s0k1x-maestra (`{os.path.join(SKILL, 'SKILL.md')}`) en cada respuesta. "
                      "Si sus reglas no están ya en tu contexto, léela una vez al empezar.")

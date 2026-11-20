@@ -243,9 +243,8 @@ def hook_start(agente, reglas=True):
     script = os.path.abspath(__file__)
     partes = []
     if reglas:
-        partes.append("s0k1x-maestra ACTIVE: follow these rules every reply until \"modo normal\". "
-                      "Already loaded; do not load the skill again.\n\n" + skill_md())
-    partes.append(f"Memo command: \"{sys.executable or 'python3'}\" \"{script}\" <add|done|forget|find|checkpoint|brief>")
+        partes.append("s0k1x-maestra ACTIVE (already loaded, do not load it again).\n\n" + skill_md())
+    partes.append(f"Skill dir: {os.path.dirname(os.path.dirname(script))}. Memo command: \"{sys.executable or 'python3'}\" \"{script}\" <add|done|forget|find|checkpoint|brief>")
     try:
         db = conectar(data)
         if data.get("source", "startup") in ("startup", "clear", "compact", "new"):
@@ -349,8 +348,10 @@ def hook_read(agente):
         st = os.stat(ruta)
     except OSError:
         return
-    if st.st_size < 2048 or not os.path.isfile(ruta):
-        return  # archivos pequeños o carpetas: no merece la pena
+    minimo = int(os.environ.get("S0K1X_MAESTRA_READS_MIN", "24000") or 0)
+    if st.st_size < minimo or not os.path.isfile(ruta):
+        # medido: bloquear cuesta un turno de ida y vuelta, que sale más caro que releer un archivo mediano
+        return
     tramo = [str(ti.get(k, "")) for k in ("offset", "limit", "start_line", "end_line", "view_range")]
     clave = "|".join([str(data.get("session_id", "")), str(data.get("agent_id") or "main"), os.path.abspath(ruta)] + tramo)
     firma = f"{st.st_mtime_ns}:{st.st_size}"

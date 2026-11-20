@@ -53,7 +53,7 @@ class Base(unittest.TestCase):
         out = self.hook(*a, **k)
         return json.loads(out) if out else None
 
-    def archivo(self, nombre="grande.txt", tam=6000):
+    def archivo(self, nombre="grande.txt", tam=30000):
         ruta = os.path.join(self.dir, nombre)
         with open(ruta, "w") as f:
             f.write("x" * tam)
@@ -251,6 +251,24 @@ class Instalador(Base):
 
 
 class PluginClaude(unittest.TestCase):
+    def test_nucleo_pequeno(self):
+        """Medido: las reglas se pagan en cada turno, así que el núcleo debe seguir siendo corto."""
+        self.assertLess(len(leer(os.path.join(RAIZ, "skills", "s0k1x-maestra", "SKILL.md")).encode()), 3500)
+
+    def test_archivos_medianos_no_se_bloquean(self):
+        d = tempfile.mkdtemp()
+        try:
+            ruta = os.path.join(d, "mediano.md")
+            with open(ruta, "w") as f:
+                f.write("x" * 10000)
+            for uso in ("1", "2"):
+                r = subprocess.run([sys.executable, MEMO, "hook-read"], capture_output=True, text=True,
+                                   input=json.dumps({"cwd": d, "session_id": "s", "tool_use_id": uso,
+                                                     "tool_input": {"file_path": ruta}}))
+                self.assertEqual(r.stdout.strip(), "")
+        finally:
+            shutil.rmtree(d, ignore_errors=True)
+
     def test_hooks_json_coherente(self):
         d = cargar(os.path.join(RAIZ, "hooks", "maestra.json"))
         texto = json.dumps(d)
