@@ -21,6 +21,19 @@ sys.path.insert(0, SCRIPTS)
 import memo  # noqa: E402
 
 
+def bash_de_claude():
+    """Claude Code usa Git Bash en Windows; el bash.exe de System32 es el lanzador de WSL."""
+    if os.name == "nt":
+        for ruta in (r"C:\Program Files\Git\bin\bash.exe", r"C:\Program Files (x86)\Git\bin\bash.exe"):
+            if os.path.exists(ruta):
+                return ruta
+        return None
+    return shutil.which("bash")
+
+
+BASH = bash_de_claude()
+
+
 def leer(ruta):
     with open(ruta, encoding="utf-8") as f:
         return f.read()
@@ -278,7 +291,7 @@ class PluginClaude(unittest.TestCase):
         self.assertTrue(os.path.exists(copia), "regenera los plugins: python3 tools/generar-plugins.py")
         self.assertEqual(cargar(copia), d, "regenera los plugins: python3 tools/generar-plugins.py")
 
-    @unittest.skipUnless(shutil.which("bash"), "sin bash")
+    @unittest.skipUnless(BASH, "sin bash")
     def test_comandos_del_plugin_se_ejecutan(self):
         """Claude Code ejecuta los hooks con bash (Git Bash en Windows): si falta python3, prueba python."""
         home = tempfile.mkdtemp()
@@ -288,7 +301,7 @@ class PluginClaude(unittest.TestCase):
             for nombre, lista in cargar(os.path.join(RAIZ, "hooks", "maestra.json"))["hooks"].items():
                 for g in lista:
                     for h in g["hooks"]:
-                        r = subprocess.run(["bash", "-c", h["command"]], input='{"source":"resume","prompt":"hola"}',
+                        r = subprocess.run([BASH, "-c", h["command"]], input='{"source":"resume","prompt":"hola"}',
                                            capture_output=True, text=True, env=env, encoding="utf-8", errors="replace")
                         self.assertEqual(r.returncode, 0, f"{nombre}: {r.stderr}")
                         if nombre == "SessionStart":
