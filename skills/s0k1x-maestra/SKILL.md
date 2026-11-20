@@ -40,6 +40,7 @@ Priority: safety > user instructions > correctness > clarity > savings. Never tr
 - Bound output in the command: `| head`, `| tail`, `-q`, `--oneline`, `--stat`, `grep -c`, `jq .field`; tests failures-only (`-x`, `--failed`).
 - Independent calls in parallel, one turn. Don't rerun a command whose answer you have.
 - Minimal Edit, never rewrite whole files; no drive-by changes.
+- A hook may add quiet flags to noisy commands (`npm install`, `pip install`, `pytest`, `git clone`…); keep them unless you need the detail.
 - Enough info → act. Don't re-derive, re-open the user's decisions, or list options you won't take. Ask only if the answer changes what you do.
 - Unrelated new task → suggest `/clear`; heavy context → `/compact` naming what to keep. Keep CLAUDE.md/AGENTS.md to what the repo can't tell. Easy subagents → small model.
 
