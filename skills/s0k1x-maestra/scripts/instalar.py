@@ -2,6 +2,8 @@
 """Activa s0k1x-maestra siempre (reglas + memo + sin relecturas) en cada agente.
 
 Uso, desde la carpeta del proyecto:
+  python3 instalar.py                    # asistente con menú (bienvenida y elegir agentes)
+  python3 instalar.py detectados         # los agentes que tengas instalados
   python3 instalar.py todos              # todos los agentes, en este proyecto
   python3 instalar.py codex gemini       # solo algunos
   python3 instalar.py todos --global     # para todos tus proyectos
@@ -225,7 +227,76 @@ def instalar(agente, raiz, glob, quitar, modelo_rapido=None):
         poner_bloque(os.path.join(raiz, "AGENTS.md"), bloque(False), quitar)
 
 
+NOMBRES = {"claude": "Claude Code", "codex": "Codex", "gemini": "Gemini CLI", "copilot": "GitHub Copilot CLI",
+           "cursor": "Cursor", "grok": "Grok", "otros": "Otros (AGENTS.md)"}
+SENALES = {"claude": (".claude", "claude"), "codex": (".codex", "codex"), "gemini": (".gemini", "gemini"),
+           "copilot": (".copilot", "copilot"), "cursor": (".cursor", "cursor"), "grok": (".grok", "grok")}
+
+
+def detectar():
+    import shutil
+    home = os.path.expanduser("~")
+    return [a for a, (carpeta, binario) in SENALES.items()
+            if os.path.isdir(os.path.join(home, carpeta)) or shutil.which(binario)]
+
+
+def memo_mod():
+    sys.dont_write_bytecode = True
+    sys.path.insert(0, AQUI)
+    import memo
+    return memo
+
+
+def menu():
+    """Asistente interactivo: se abre al ejecutar el instalador sin argumentos."""
+    memo = memo_mod()
+    print(memo.bienvenida())
+    vistos = detectar()
+    print("\n  ¿En qué agentes la activo?\n")
+    for i, a in enumerate(AGENTES, 1):
+        marca = "  ✓ detectado" if a in vistos else ""
+        nota = "  (el plugin ya la activa sola)" if a == "claude" else ""
+        print(f"   {i}. {NOMBRES[a]}{marca}{nota}")
+    defecto = [a for a in vistos if a != "claude"] or ["otros"]
+    print(f"\n   Enter = los detectados ({', '.join(NOMBRES[a] for a in defecto)}) · t = todos · q = salir")
+    r = input("   Elige (por ejemplo 2,3): ").strip().lower()
+    if r == "q":
+        print("  Nada instalado.")
+        return 0
+    if r == "t":
+        elegidos = [a for a in AGENTES if a != "claude"]
+    elif r:
+        try:
+            elegidos = [AGENTES[int(x) - 1] for x in r.replace(" ", "").split(",") if x]
+        except (ValueError, IndexError):
+            print("  No entiendo esa opción. Vuelve a ejecutar el instalador.")
+            return 1
+    else:
+        elegidos = defecto
+    g = input("\n   ¿Solo este proyecto (Enter) o todos tus proyectos (g)? ").strip().lower() == "g"
+    modelo = None
+    if "copilot" in elegidos:
+        modelo = input("   Modelo barato para el subagente de Copilot (Enter = ninguno): ").strip() or None
+    print()
+    for a in elegidos:
+        instalar(a, os.getcwd(), g, False, modelo)
+    memo.marcar_vista()  # ya vio la bienvenida aquí: el agente no la repite
+    despedida(elegidos, g)
+    return 0
+
+
+def despedida(pedidos, glob):
+    print("\n  Listo. Abre una sesión nueva en tu agente y trabaja como siempre.")
+    if "codex" in pedidos:
+        print("  · Codex: la primera vez, revisa y confía en los hooks con /hooks.")
+    if "grok" in pedidos and not glob:
+        print("  · Grok: confía en el proyecto con /hooks-trust (o arranca con --trust).")
+    print("  · Para deshacerlo: python3 instalar.py todos --quitar")
+
+
 def main(argv):
+    if not argv and sys.stdin.isatty():
+        return menu()
     quitar = "--quitar" in argv
     modelo_rapido = next((a.split("=", 1)[1] for a in argv if a.startswith("--modelo-rapido=")), None)
     glob = "--global" in argv
@@ -233,20 +304,21 @@ def main(argv):
     if not pedidos or "-h" in argv or "--help" in argv:
         print(__doc__)
         return 0
+    if "detectados" in pedidos:
+        pedidos = [a for a in detectar() if a != "claude"] or ["otros"]
     if "todos" in pedidos:
         pedidos = [a for a in AGENTES if a != "claude"] + [a for a in pedidos if a == "claude"]
     malos = [a for a in pedidos if a not in AGENTES]
     if malos:
-        sys.exit(f"Agente desconocido: {', '.join(malos)}. Válidos: {', '.join(AGENTES)}, todos.")
+        sys.exit(f"Agente desconocido: {', '.join(malos)}. Válidos: {', '.join(AGENTES)}, todos, detectados.")
     raiz = os.getcwd()
+    if not quitar and "--sin-bienvenida" not in argv:
+        print(memo_mod().bienvenida() + "\n")
+        memo_mod().marcar_vista()
     for a in dict.fromkeys(pedidos):
         instalar(a, raiz, glob, quitar, modelo_rapido)
     if not quitar:
-        print("\nListo. Abre una sesión nueva en tu agente.")
-        if "codex" in pedidos:
-            print("Codex: revisa y confía en los hooks con /hooks la primera vez.")
-        if "grok" in pedidos and not glob:
-            print("Grok: confía en el proyecto con /hooks-trust (o --trust).")
+        despedida(pedidos, glob)
     return 0
 
 

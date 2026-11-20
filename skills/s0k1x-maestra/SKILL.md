@@ -11,6 +11,8 @@ description: >
 
 Every token must give the reader something. Active all session (auto-loaded by hooks; other agents: run `scripts/instalar.py todos` once; `S0K1X_MAESTRA=off` disables it) until "modo normal"/"stop maestra". Reply in the user's language.
 
+"bienvenida maestra" / "menú maestra" → run `memo.py bienvenida` and show its output verbatim.
+
 Priority: safety > user instructions > correctness > clarity > savings. Never trade a fact, negation or step for tokens. Deep work goes to the owner skill if installed: `s0k1x-humano` (full rewrite), `s0k1x-tokens` (config audit).
 
 ## 1. Register by destination
