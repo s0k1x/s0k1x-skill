@@ -153,6 +153,12 @@ class Hooks(Base):
                       ["modifiedArgs"]["command"])
         self.assertEqual(self.hook("hook-shell", {"tool_input": {"command": "ls -la"}}), "")
 
+    def test_editado_se_apunta_solo(self):
+        ruta = os.path.join(self.dir, "src", "a.py")
+        for _ in range(2):
+            self.hook("hook-editado", {"tool_name": "Edit", "tool_input": {"file_path": ruta}})
+        self.assertEqual(self.hook("hook-prompt", {"prompt": "sigue con src/a.py por favor"}).count("editado: src/a.py"), 1)
+
     def test_aviso_chat_largo(self):
         tr = os.path.join(self.dir, "t.jsonl")
 
@@ -162,11 +168,13 @@ class Hooks(Base):
         datos = {"session_id": "s", "transcript_path": tr, "prompt": "hola"}
         turno(30_000)
         self.assertEqual(self.hook("hook-prompt", datos), "")
-        turno(70_000)
+        turno(100_000)
+        self.assertEqual(self.hook("hook-prompt", datos), "", "medido: con caché, limpiar antes no compensa")
+        turno(160_000)
         self.assertIn("/clear", self.hook("hook-prompt", datos))
         self.assertEqual(self.hook("hook-prompt", datos), "", "avisa una vez por nivel")
-        turno(125_000)
-        self.assertIn("125k", self.hook("hook-prompt", datos))
+        turno(310_000)
+        self.assertIn("310k", self.hook("hook-prompt", datos))
 
 
 class Enrutador(Base):
@@ -285,7 +293,7 @@ class PluginClaude(unittest.TestCase):
     def test_hooks_json_coherente(self):
         d = cargar(os.path.join(RAIZ, "hooks", "maestra.json"))
         texto = json.dumps(d)
-        for sub in ("hook-start", "hook-prompt", "hook-read", "hook-agent", "hook-shell", "hook-agent-fin"):
+        for sub in ("hook-start", "hook-prompt", "hook-read", "hook-agent", "hook-shell", "hook-agent-fin", "hook-editado"):
             self.assertIn(sub, texto)
         copia = os.path.join(RAIZ, "plugins", "s0k1x-maestra", "hooks", "hooks.json")
         self.assertTrue(os.path.exists(copia), "regenera los plugins: python3 tools/generar-plugins.py")

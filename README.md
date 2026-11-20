@@ -86,7 +86,7 @@ Con Grok la ruta es `.grok/skills/s0k1x-maestra/scripts/instalar.py`. Si solo qu
 
 En Codex, confía en los hooks con `/hooks` la primera vez; en Grok, con `/hooks-trust`.
 
-**Aviso cuando el chat crece.** El chat entero se reenvía en cada mensaje, así que cuando el contexto pasa de 60.000 tokens (y luego cada 60.000 más), la skill le pide al agente que termine el paso, guarde un punto de control y te sugiera `/clear`. En Claude Code mide el uso real del último turno; en los demás, lo estima por el tamaño de la conversación. Cambia el límite con `S0K1X_MAESTRA_AVISO_TOKENS` (0 lo apaga).
+**Aviso cuando el chat crece.** El chat entero se reenvía en cada mensaje, así que cuando el contexto pasa de 150.000 tokens (y luego cada 150.000 más), la skill le pide al agente que termine el paso, guarde un punto de control y te sugiera `/clear`. En Claude Code mide el uso real del último turno; en los demás, lo estima por el tamaño de la conversación. Cambia el límite con `S0K1X_MAESTRA_AVISO_TOKENS` (0 lo apaga).
 
 **Comandos silenciosos.** Antes de ejecutar `npm install`, `pip install`, `pytest`, `git clone`, `apt-get` o `docker pull`, añade la opción que quita el ruido pero deja ver los errores (`--loglevel=error`, `-q`…). No aprueba nada: el comando sigue pidiendo permiso como siempre. No toca comandos con tuberías complejas, heredocs ni subcomandos. Funciona en Claude Code, Codex, Gemini, Copilot y Grok; se apaga con `S0K1X_MAESTRA_SHELL=off`.
 

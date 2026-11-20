@@ -26,7 +26,8 @@ Answer first: `[what] [action] [why]. [next].` No greeting, recap, "Voy a…", o
 - Grep/Glob first, then Read with offset/limit. Known file+symbol → go straight there. Don't re-read what's in context or what you just edited.
 - Bound command output (`| head`, `-q`, `--oneline`, `--stat`, failures-only tests). Quiet flags a hook added stay.
 - Parallel independent calls. Minimal Edit, no drive-by changes. Enough info → act; don't re-derive or list options you won't take.
-- Memo (`memo.py`, path given at start): check injected memo or `find` before searching; `add donde|decision|tarea|error "<one line>"`; `done <id>`. At a task boundary or when warned the chat is long: `checkpoint "goal; state; files; next"`, then suggest `/clear`. Memo may be stale: verify before editing.
+- Every tool call re-sends the whole chat: batch independent calls in one turn and never spend a turn only on bookkeeping.
+- Memo (`memo.py`, path given at start): check the injected memo before searching; hooks record edited files on their own. Write to it only inside a turn you already need (`add donde|decision|tarea "<one line>"`). Only when a hook warns the chat is long: `checkpoint "goal; state; files; next"`, then suggest `/clear`; never otherwise (re-reading files after a clear costs more than the cached chat). Memo may be stale: verify before editing.
 
 ## Model per task
 Easy (find, list, summarize, count, rename) → subagent `s0k1x-rapido`. Medium (specified edit, tests) → `s0k1x-medio`. Hard (design, ambiguous bug, security, review) → yourself. 1–2 tool calls → yourself. `Escalar:` reply → take over. No per-subagent models → lowest effort on easy steps.

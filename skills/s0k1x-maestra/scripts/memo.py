@@ -308,7 +308,7 @@ def tokens_contexto(data):
 
 
 def aviso_contexto(data, db):
-    limite = int(os.environ.get("S0K1X_MAESTRA_AVISO_TOKENS", "60000") or 0)
+    limite = int(os.environ.get("S0K1X_MAESTRA_AVISO_TOKENS", "150000") or 0)
     if limite <= 0:
         return ""
     tokens = tokens_contexto(data)
@@ -479,6 +479,25 @@ def hook_agent_fin(agente):
     log_router(data, f"ESCALADO: {str(ti.get('description', ''))[:80]} (las parecidas ya no irán a Haiku)")
 
 
+def hook_editado(agente):
+    """PostToolUse de Edit/Write: apunta el archivo en el memo sin gastar ningún turno del modelo."""
+    data = leer_stdin()
+    ti = data.get("tool_input") or {}
+    ruta = ti.get("file_path") or ti.get("path") if isinstance(ti, dict) else None
+    if not ruta:
+        return
+    rel = os.path.relpath(ruta, proyecto(data)) if os.path.isabs(ruta) else ruta
+    if rel.startswith(".."):
+        return
+    texto = "editado: " + rel.replace(os.sep, "/")
+    db = conectar(data)
+    if db.execute("SELECT 1 FROM memo WHERE tipo='donde' AND texto=?", (texto,)).fetchone():
+        db.execute("UPDATE memo SET ts=? WHERE tipo='donde' AND texto=?", (time.time(), texto))
+    else:
+        db.execute("INSERT INTO memo(tipo, texto, ts) VALUES ('donde',?,?)", (texto, time.time()))
+    db.commit()
+
+
 # --- Recorte de comandos ruidosos ------------------------------------------
 # Solo añade opciones silenciosas que siguen mostrando errores. Solo actúa si el
 # trozo del comando EMPIEZA por la herramienta (así no toca un `echo "npm install"`).
@@ -539,7 +558,7 @@ def main(argv):
         print(__doc__)
         return 0
     cmd, args = argv[0], argv[1:]
-    if cmd in ("hook-start", "hook-prompt", "hook-read", "hook-agent", "hook-agent-fin", "hook-shell"):
+    if cmd in ("hook-start", "hook-prompt", "hook-read", "hook-agent", "hook-agent-fin", "hook-shell", "hook-editado"):
         agente = "claude"
         if "--agent" in args and args.index("--agent") + 1 < len(args):
             agente = args[args.index("--agent") + 1]
@@ -554,6 +573,8 @@ def main(argv):
                 hook_agent_fin(agente)
             elif cmd == "hook-shell":
                 hook_shell(agente)
+            elif cmd == "hook-editado":
+                hook_editado(agente)
             else:
                 hook_read(agente)
         except Exception as e:  # un hook nunca debe romper la sesión

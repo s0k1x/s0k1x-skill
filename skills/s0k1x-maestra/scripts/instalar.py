@@ -177,7 +177,8 @@ def instalar(agente, raiz, glob, quitar, modelo_rapido=None):
             "PreToolUse": [grupo(cmd("hook-read", "claude"), "Read", 5),
                            grupo(cmd("hook-agent", "claude"), "Agent|Task", 5),
                            grupo(cmd("hook-shell", "claude"), "Bash", 5)],
-            "PostToolUse": [grupo(cmd("hook-agent-fin", "claude"), "Agent|Task", 5)],
+            "PostToolUse": [grupo(cmd("hook-agent-fin", "claude"), "Agent|Task", 5),
+                            grupo(cmd("hook-editado", "claude"), "Edit|Write|MultiEdit", 5)],
         }, quitar=quitar)
         d = os.path.join(home if glob else raiz, ".claude", "agents")
         subagente(os.path.join(d, "s0k1x-rapido.md"), "name: s0k1x-rapido\ndescription: " + json.dumps(RAPIDO, ensure_ascii=False) +
