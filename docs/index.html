@@ -386,9 +386,9 @@ html:not(.js) .rv { opacity: 1; transform: none; }
       <p class="lead rv" style="--d:.12s">Se activa sola al instalarla y no hay que pedirle nada. Estas son sus piezas y lo que ahorran.</p>
     </div>
     <div class="stats rv" style="--d:.16s">
-      <div class="stat"><b><em>{{AHORRO}}</em></b><span>menos coste de media en {{N_TAREAS}} tareas reales de Claude Code, con y sin la skill.</span></div>
-      <div class="stat"><b>{{SALIDA}}</b><span>menos tokens de salida: respuestas que van al grano sin perder ningún dato.</span></div>
-      <div class="stat"><b>{{MEJOR}}</b><span>{{MEJOR_TXT}}</span></div>
+      <div class="stat"><b><em>−12 %</em></b><span>menos coste de media en 5 tareas reales de Claude Code, con y sin la skill.</span></div>
+      <div class="stat"><b>−13 %</b><span>menos tokens de salida: respuestas que van al grano sin perder ningún dato.</span></div>
+      <div class="stat"><b>−46 %</b><span>en las tareas que delega: el subagente fácil corre en un modelo barato en vez del principal.</span></div>
     </div>
     <div class="grid">
       <article class="card rv"><h3>Respuestas cortas <span>01</span></h3><p>Primero la respuesta y sin relleno. Lo que va a leer otra persona (webs, documentos, PRs) lo escribe sin tono de IA.</p></article>
@@ -411,7 +411,7 @@ html:not(.js) .rv { opacity: 1; transform: none; }
         </tbody>
       </table>
     </div>
-    <p class="fuente rv">{{FUENTE}}</p>
+    <p class="fuente rv">Medido el 20 de noviembre de 2026 con <code>tools/medir-ahorro.py</code>: 5 tareas, 2 veces cada una, en Claude Code con Opus, con y sin la skill, siempre en copias limpias del repositorio. Dos tareas salieron más caras con la skill (releer un archivo entero a propósito y una edición de una línea), porque sus reglas tienen un coste fijo en cada turno. El aviso de chat largo y los puntos de control no salen en esta prueba, que usa sesiones cortas, y es donde más se ahorra en sesiones largas.</p>
   </div>
 </section>
 

@@ -160,7 +160,7 @@ Algunas skills necesitan tu permiso explícito: las skills de la nube externa y 
 ## Tests y medición
 
 - `python3 -m unittest discover -s tests -v` comprueba `s0k1x-maestra` con la biblioteca estándar: los formatos de cada agente, la memoria, las relecturas, el aviso de chat largo, el recorte de comandos, el enrutador y el instalador. También ejecuta los comandos que genera el instalador, igual que los ejecutaría cada agente. GitHub los pasa en cada cambio en Linux, macOS y Windows (`.github/workflows/tests.yml`).
-- `python3 tools/medir-ahorro.py --repeticiones 2` mide el ahorro real: ejecuta las mismas tareas con y sin la skill en copias limpias del repositorio y compara el coste y los tokens que da Claude Code. Gasta créditos de tu cuenta.
+- `python3 tools/medir-ahorro.py --repeticiones 2` mide el ahorro real. Última medición (20/11/2026, Claude Code con Opus, 5 tareas × 2): **12 % menos de coste en total**, 13 % menos de tokens de salida. Localizar código costó un 24 % menos y una tarea delegada en un subagente, un 46 % menos. Releer a propósito un archivo entero (+21 %) y una edición de una línea (+9 %) salieron más caras, por el coste fijo de las reglas en cada turno. Así se hace: ejecuta las mismas tareas con y sin la skill en copias limpias del repositorio y compara el coste y los tokens que da Claude Code. Gasta créditos de tu cuenta.
 
 ## Licencia
 
