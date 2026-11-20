@@ -13,6 +13,7 @@ Uso (desde Claude o a mano):
   memo.py checkpoint <texto>     guarda el punto de control de la sesión
   memo.py brief                  resumen corto (lo que se inyecta al empezar)
   memo.py list                   todo
+  memo.py bienvenida             qué es y cómo funciona
 
 Hooks (leen JSON por stdin): hook-start, hook-prompt, hook-read
   [--agent claude|codex|gemini|copilot|cursor|grok] [--sin-reglas].
@@ -27,7 +28,64 @@ import sqlite3
 import sys
 import time
 
+VERSION = "1.6.0"
 TIPOS = ("dato", "decision", "donde", "tarea", "error")
+
+BIENVENIDA = """\
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  s0k1x-maestra · v{version}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Te damos la bienvenida. Ya está activa: no tienes que hacer nada más.
+
+  Qué hace
+   1. Responde corto y al grano. Lo que va a leer otra persona
+      (webs, documentos, PRs, emails) lo escribe sin tono de IA.
+   2. Gasta menos: lee solo lo necesario, no relee archivos que
+      no han cambiado y manda lo fácil a un modelo más barato.
+   3. Recuerda tu proyecto en .claude/maestra/memo.db. Al acabar
+      una tarea guarda un punto de control: haz /clear y la sesión
+      nueva sigue desde ahí sin cargar el chat anterior.
+
+  Para controlarla
+   · Di «modo normal» para apagarla en esta sesión.
+   · S0K1X_MAESTRA=off la desactiva siempre.
+   · Di «bienvenida maestra» para volver a ver esto.
+
+  Licencia
+   Puedes instalarla y usarla tal cual en tus proyectos. No está
+   permitido copiarla, modificarla, redistribuirla ni publicarla
+   como propia. Condiciones completas en el archivo LICENSE de
+   github.com/s0k1x/s0k1x-skill
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
+
+
+def bienvenida():
+    return BIENVENIDA.format(version=VERSION)
+
+
+def ruta_estado():
+    return os.path.join(os.path.expanduser("~"), ".s0k1x-maestra", "estado.json")
+
+
+def marcar_vista():
+    try:
+        os.makedirs(os.path.dirname(ruta_estado()), exist_ok=True)
+        json.dump({"bienvenida": VERSION}, open(ruta_estado(), "w"))
+    except OSError:
+        pass
+
+
+def toca_bienvenida():
+    """'nueva' la primera vez en este equipo, 'novedades' tras actualizar, None si ya se vio."""
+    try:
+        vista = json.load(open(ruta_estado())).get("bienvenida")
+    except (OSError, ValueError):
+        vista = None
+    if vista == VERSION:
+        return None
+    marcar_vista()
+    return "novedades" if vista else "nueva"
+
 BRIEF_MAX = 1800
 PROMPT_MAX = 700
 
@@ -141,7 +199,16 @@ def skill_md():
 # Cómo entrega cada agente el contexto y las denegaciones.
 #   claude: texto plano. codex/gemini: hookSpecificOutput. copilot: camelCase.
 #   cursor: snake_case. grok/otros: texto plano (si el agente lo ignora, no pasa nada).
-def emitir_contexto(agente, evento, texto):
+def emitir_contexto(agente, evento, texto, aviso=None):
+    """aviso: texto para el usuario (bienvenida). Donde el agente no puede mostrarlo, lo enseña el modelo."""
+    if aviso and agente in ("claude", "codex", "gemini"):
+        nombre = "SessionStart"
+        print(json.dumps({"systemMessage": aviso,
+                          "hookSpecificOutput": {"hookEventName": nombre, "additionalContext": texto}}))
+        return
+    if aviso:
+        texto = ("FIRST RUN: begin your first reply by showing the user this welcome exactly as written, "
+                 "then answer their message.\n" + aviso + "\n\n" + texto)
     if not texto:
         if agente == "cursor" and evento == "prompt":
             print(json.dumps({"continue": True}))
@@ -195,7 +262,15 @@ def hook_start(agente, reglas=True):
             partes.append("## Memo (contexto guardado: úsalo antes de buscar)\n" + b)
     except Exception as e:
         print(f"s0k1x-maestra memo: {e}", file=sys.stderr)
-    emitir_contexto(agente, "start", "\n\n".join(partes))
+    aviso = None
+    if os.environ.get("S0K1X_MAESTRA_BIENVENIDA", "on") != "off" and data.get("source", "startup") in ("startup", "new"):
+        estado = toca_bienvenida()
+        if estado == "nueva":
+            aviso = bienvenida()
+        elif estado == "novedades":
+            aviso = (f"s0k1x-maestra se ha actualizado a la v{VERSION}. "
+                     "Di «bienvenida maestra» para ver cómo funciona.")
+    emitir_contexto(agente, "start", "\n\n".join(partes), aviso)
 
 
 def hook_prompt(agente):
@@ -323,6 +398,9 @@ def main(argv):
                 hook_read(agente)
         except Exception as e:  # un hook nunca debe romper la sesión
             print(f"s0k1x-maestra memo: {e}", file=sys.stderr)
+        return 0
+    if cmd == "bienvenida":
+        print(bienvenida())
         return 0
     db = conectar()
     if cmd == "add" and len(args) >= 2 and args[0] in TIPOS:

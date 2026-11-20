@@ -7,6 +7,7 @@ Copyright (c) 2026 s0k1x. Todos los derechos reservados.
 
 Esta licencia cubre la "Obra Propia": todos los archivos de este repositorio
 creados por s0k1x, en concreto skills/s0k1x-skill/, skills/s0k1x-componentes/,
+skills/s0k1x-maestra/,
 agents/, hooks/, types/, plugins/, tools/, .claude-plugin/, docs/, README.md,
 AVISOS.md y esta licencia, así como la
 selección, organización, nombres y coordinación del conjunto del kit.
@@ -24,7 +25,9 @@ personal, no exclusivo, intransferible y revocable para:
   a) instalar el plugin s0k1x-skill, o cualquiera de sus plugins individuales,
      en Claude Code desde el repositorio oficial
      (https://github.com/s0k1x/s0k1x-skill) mediante los comandos de
-     instalación publicados, y
+     instalación publicados, o en otros agentes de código compatibles con
+     skills (Codex, Gemini CLI, GitHub Copilot, Cursor, Grok y similares)
+     mediante `npx skills` y el instalador incluido, y
   b) usarlo tal cual, sin cambios, en sus propios proyectos.
 
 3. LO QUE SE PROHÍBE
@@ -45,7 +48,8 @@ la Obra Propia:
   f) usar el nombre "s0k1x" o "s0k1x-skill" para identificar productos o
      servicios que no sean de s0k1x.
 
-Las copias que hagan de forma automática Claude Code, git o GitHub únicamente
+Las copias que hagan de forma automática Claude Code, `npx skills`, el
+instalador incluido, git o GitHub únicamente
 para instalar y usar el plugin conforme al apartado 2 no se consideran
 redistribución.
 

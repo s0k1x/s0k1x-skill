@@ -65,8 +65,12 @@ Trae una **mini base de datos** SQLite por proyecto (`.claude/maestra/memo.db`, 
 
 ```
 npx skills add s0k1x/s0k1x-skill -a codex -s s0k1x-maestra
-python3 .agents/skills/s0k1x-maestra/scripts/instalar.py todos
+python3 .agents/skills/s0k1x-maestra/scripts/instalar.py
 ```
+
+Sin argumentos abre un **asistente**: te da la bienvenida, explica cómo funciona y las condiciones de uso, detecta qué agentes tienes y te deja elegir dónde activarla. Para hacerlo sin preguntas, añade `detectados`, `todos` o los nombres de los agentes.
+
+En Claude Code la bienvenida sale sola en la primera sesión tras instalarla, y después de cada actualización aparece un aviso corto. Para verla otra vez, di «bienvenida maestra». Para no mostrarla nunca, `S0K1X_MAESTRA_BIENVENIDA=off`.
 
 Con Grok la ruta es `.grok/skills/s0k1x-maestra/scripts/instalar.py`. Si solo quieres algunos agentes, pon sus nombres en vez de `todos` (`codex gemini copilot cursor grok otros`). Con `--global` vale para todos tus proyectos, y con `--quitar` se deshace. Lo que hace en cada agente:
 

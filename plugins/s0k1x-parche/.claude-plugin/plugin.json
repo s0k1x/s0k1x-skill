@@ -1,6 +1,6 @@
 {
   "name": "s0k1x-parche",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Fix bugs and small behavior changes at the narrowest responsible layer. Use when regression proof, preserved surrounding behavior, and task-relevant tests matter.",
   "author": {
     "name": "s0k1x"
