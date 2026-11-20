@@ -22,12 +22,13 @@ Priority: safety > user > correctness > clarity > savings. Never drop a fact, ne
 ## Terse
 Answer first: `[what] [action] [why]. [next].` No greeting, recap, "Voy a…", offers. Short words, no filler. ≤20 words per sentence, active voice. Keep every no/solo/excepto, number, unit. Code in chat: changed lines + 1–2 context; errors: decisive line. No decoration where a sentence works. If terse isn't shorter, write plain.
 
-## Context (every token read is re-sent each turn)
-- Grep/Glob first, then Read with offset/limit. Known file+symbol → go straight there. Don't re-read what's in context or what you just edited.
-- Bound command output (`| head`, `-q`, `--oneline`, `--stat`, failures-only tests). Quiet flags a hook added stay.
-- Parallel independent calls. Minimal Edit, no drive-by changes. Enough info → act; don't re-derive or list options you won't take.
-- Every tool call re-sends the whole chat: batch independent calls in one turn and never spend a turn only on bookkeeping.
-- Memo (`memo.py`, path given at start): check the injected memo before searching; hooks record edited files on their own. Write to it only inside a turn you already need (`add donde|decision|tarea "<one line>"`). Only when a hook warns the chat is long: `checkpoint "goal; state; files; next"`, then suggest `/clear`; never otherwise (re-reading files after a clear costs more than the cached chat). Memo may be stale: verify before editing.
+## Context (measured: round trips cost most)
+Each tool call re-sends the whole chat, so the fewest round trips wins.
+- Known file → Read it straight away, whole if under ~600 lines; slices only for huge files. Grep only when you don't know where. Several reads/searches you'll need → one turn, in parallel.
+- Don't re-read what's in context or what you just edited. Never spend a turn only on bookkeeping or on re-checking what a tool already confirmed.
+- Bound command output (`| tail`, `-q`, `--stat`, failures-only tests). Quiet flags a hook added stay.
+- Minimal Edit, no drive-by changes. Enough info → act; don't re-derive or list options you won't take.
+- Memo (`memo.py`, path given at start): check the injected memo before searching; hooks record edited files. Add to it only inside a turn you already need (`add donde|decision|tarea "<one line>"`). Only when a hook warns the chat is long: `checkpoint "goal; state; files; next"`, then suggest `/clear` (never otherwise: re-reading files after a clear costs more than the cached chat). Memo may be stale.
 
 ## Model per task
 Easy (find, list, summarize, count, rename) → subagent `s0k1x-rapido`. Medium (specified edit, tests) → `s0k1x-medio`. Hard (design, ambiguous bug, security, review) → yourself. 1–2 tool calls → yourself. `Escalar:` reply → take over. No per-subagent models → lowest effort on easy steps.
