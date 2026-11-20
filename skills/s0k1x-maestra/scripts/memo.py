@@ -28,6 +28,17 @@ import sqlite3
 import sys
 import time
 
+def _utf8():
+    # Windows usa cp1252 en consola: sin esto, una tilde o un ✓ rompen el hook
+    for flujo in (sys.stdout, sys.stderr):
+        try:
+            flujo.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):
+            pass
+
+
+_utf8()
+
 VERSION = "1.7.0"
 TIPOS = ("dato", "decision", "donde", "tarea", "error")
 

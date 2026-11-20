@@ -24,6 +24,17 @@ import re
 import shlex
 import sys
 
+def _utf8():
+    # Windows usa cp1252 en consola: sin esto, una tilde o un ✓ rompen el hook
+    for flujo in (sys.stdout, sys.stderr):
+        try:
+            flujo.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):
+            pass
+
+
+_utf8()
+
 AQUI = os.path.dirname(os.path.abspath(__file__))
 SKILL = os.path.dirname(AQUI)
 MEMO = os.path.join(AQUI, "memo.py")

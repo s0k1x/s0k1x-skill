@@ -234,10 +234,10 @@ class Instalador(Base):
                 if not shutil.which("powershell") and not shutil.which("pwsh"):
                     continue
                 args = [shutil.which("powershell") or shutil.which("pwsh"), "-NoProfile", "-Command", comando]
-                r = subprocess.run(args, input='{"source":"resume"}', capture_output=True, text=True, env=self.env)
+                r = subprocess.run(args, input='{"source":"resume"}', capture_output=True, text=True, env=self.env, encoding="utf-8", errors="replace")
             else:
                 r = subprocess.run(comando, shell=True, input='{"source":"resume"}', capture_output=True, text=True,
-                                   env=self.env, cwd=self.dir)
+                                   env=self.env, cwd=self.dir, encoding="utf-8", errors="replace")
             self.assertEqual(r.returncode, 0, f"{archivo} [{campo}] {comando}\n{r.stderr}")
             if "hook-start" in comando:
                 self.assertIn("s0k1x-maestra", r.stdout, f"{archivo}: {comando}")
@@ -262,7 +262,7 @@ class PluginClaude(unittest.TestCase):
             with open(ruta, "w") as f:
                 f.write("x" * 10000)
             for uso in ("1", "2"):
-                r = subprocess.run([sys.executable, MEMO, "hook-read"], capture_output=True, text=True,
+                r = subprocess.run([sys.executable, MEMO, "hook-read"], capture_output=True, text=True, encoding="utf-8",
                                    input=json.dumps({"cwd": d, "session_id": "s", "tool_use_id": uso,
                                                      "tool_input": {"file_path": ruta}}))
                 self.assertEqual(r.stdout.strip(), "")
@@ -289,7 +289,7 @@ class PluginClaude(unittest.TestCase):
                 for g in lista:
                     for h in g["hooks"]:
                         r = subprocess.run(["bash", "-c", h["command"]], input='{"source":"resume","prompt":"hola"}',
-                                           capture_output=True, text=True, env=env)
+                                           capture_output=True, text=True, env=env, encoding="utf-8", errors="replace")
                         self.assertEqual(r.returncode, 0, f"{nombre}: {r.stderr}")
                         if nombre == "SessionStart":
                             self.assertIn("s0k1x-maestra", r.stdout)
